@@ -48,6 +48,9 @@ class HTTPSEverywhereService : public BaseBraveShieldsService,
  public:
   explicit HTTPSEverywhereService(BraveComponent::Delegate* delegate);
   ~HTTPSEverywhereService() override;
+
+  void InitDB(const base::FilePath& install_dir);
+
   bool GetHTTPSURL(const GURL* url,
                    const uint64_t& request_id,
                    std::string* new_url);
@@ -57,9 +60,6 @@ class HTTPSEverywhereService : public BaseBraveShieldsService,
 
  protected:
   bool Init() override;
-  void OnComponentReady(const std::string& component_id,
-      const base::FilePath& install_dir,
-      const std::string& manifest) override;
 
   void AddHTTPSEUrlToRedirectList(const uint64_t& request_id);
   bool ShouldHTTPSERedirect(const uint64_t& request_id);
@@ -70,16 +70,9 @@ class HTTPSEverywhereService : public BaseBraveShieldsService,
  private:
   friend class ::HTTPSEverywhereServiceTest;
   static bool g_ignore_port_for_test_;
-  static std::string g_https_everywhere_component_id_;
-  static std::string g_https_everywhere_component_base64_public_key_;
   static void SetIgnorePortForTest(bool ignore);
-  static void SetComponentIdAndBase64PublicKeyForTest(
-      const std::string& component_id,
-      const std::string& component_base64_public_key);
 
   void CloseDatabase();
-
-  void InitDB(const base::FilePath& install_dir);
 
   base::Lock httpse_get_urls_redirects_count_mutex_;
   std::vector<HTTPSE_REDIRECTS_COUNT_ST> httpse_urls_redirects_count_;
