@@ -17,6 +17,7 @@
 #include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/common/pref_names.h"
+#include "brave/components/brave_federated_learning/brave_federated_learning_features.h"
 #include "brave/components/brave_today/common/features.h"
 #include "brave/components/content_settings/core/browser/brave_content_settings_pref_provider.h"
 #include "brave/components/decentralized_dns/buildflags/buildflags.h"
@@ -120,7 +121,6 @@ void BraveProfileManager::DoFinalInitForServices(Profile* profile,
     return;
   brave_ads::AdsServiceFactory::GetForProfile(profile);
   brave_rewards::RewardsServiceFactory::GetForProfile(profile);
-  brave::BraveFederatedLearningServiceFactory::GetForBrowserContext(profile);
 #if BUILDFLAG(ENABLE_IPFS)
   ipfs::IpfsServiceFactory::GetForContext(profile);
 #endif
@@ -135,6 +135,10 @@ void BraveProfileManager::DoFinalInitForServices(Profile* profile,
 #endif
   if (base::FeatureList::IsEnabled(brave_today::features::kBraveNewsFeature)) {
     brave_news::BraveNewsControllerFactory::GetForContext(profile);
+  }
+  if (base::FeatureList::IsEnabled(
+          brave::federated_learning::features::kFederatedLearning)) {
+    brave::BraveFederatedLearningServiceFactory::GetForBrowserContext(profile);
   }
 }
 

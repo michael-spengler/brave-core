@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //-------------------------------------------------------------------------------
-// |BraveOperationalPatterns| is a class for handling the collection of
+// |OperationalPatterns| is a class for handling the collection of
 // operational patterns, which are are anonymous, minimal representations of how
 // users engage with the browser over a collection period. A collection period
 // is divided into collection slots (i.e. 30m intervals). Two timers are
@@ -20,8 +20,8 @@
 //
 //-------------------------------------------------------------------------------
 
-#ifndef BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_BRAVE_OPERATIONAL_PATTERNS_H_
-#define BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_BRAVE_OPERATIONAL_PATTERNS_H_
+#ifndef BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_OPERATIONAL_PATTERNS_H_
+#define BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_OPERATIONAL_PATTERNS_H_
 
 #include <memory>
 #include <string>
@@ -45,14 +45,16 @@ class SimpleURLLoader;
 
 namespace brave {
 
-class BraveOperationalPatterns final {
+namespace federated_learning {
+
+class OperationalPatterns final {
  public:
-  BraveOperationalPatterns(
+  OperationalPatterns(
       PrefService* pref_service,
       scoped_refptr<network::SharedURLLoaderFactory> url_loader_factory);
-  ~BraveOperationalPatterns();
-  BraveOperationalPatterns(const BraveOperationalPatterns&) = delete;
-  BraveOperationalPatterns& operator=(const BraveOperationalPatterns&) = delete;
+  ~OperationalPatterns();
+  OperationalPatterns(const OperationalPatterns&) = delete;
+  OperationalPatterns& operator=(const OperationalPatterns&) = delete;
 
   static void RegisterPrefs(PrefRegistrySimple* registry);
 
@@ -87,6 +89,8 @@ class BraveOperationalPatterns final {
   std::string collection_id_;
 };
 
+}  // namespace federated_learning
+
 }  // namespace brave
 
-#endif  // BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_BRAVE_OPERATIONAL_PATTERNS_H_
+#endif  // BRAVE_COMPONENTS_BRAVE_FEDERATED_LEARNING_OPERATIONAL_PATTERNS_H_
