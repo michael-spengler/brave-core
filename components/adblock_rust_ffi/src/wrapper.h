@@ -68,7 +68,7 @@ class ADBLOCK_EXPORT Engine {
  public:
   Engine();
   explicit Engine(const std::string& rules);
-  Engine(const char* data, size_t data_size);
+  Engine(const char* data, size_t data_size, const bool include_redirect_urls);
   Engine(const std::string& rules, const bool include_redirect_urls);
   void matches(const std::string& url,
                const std::string& host,

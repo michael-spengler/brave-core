@@ -24,14 +24,15 @@ class WebContents;
 namespace brave_shields {
 
 class AdBlockService;
-class AdBlockCustomFiltersService;
+class AdBlockCustomFiltersSourceProvider;
 
 class DomainBlockNavigationThrottle : public content::NavigationThrottle {
  public:
   explicit DomainBlockNavigationThrottle(
       content::NavigationHandle* navigation_handle,
       AdBlockService* ad_block_service,
-      AdBlockCustomFiltersService* ad_block_custom_filters_service,
+      AdBlockCustomFiltersSourceProvider*
+          ad_block_custom_filters_source_provider,
       HostContentSettingsMap* content_settings,
       const std::string& locale);
   ~DomainBlockNavigationThrottle() override;
@@ -43,7 +44,8 @@ class DomainBlockNavigationThrottle : public content::NavigationThrottle {
   static std::unique_ptr<DomainBlockNavigationThrottle> MaybeCreateThrottleFor(
       content::NavigationHandle* navigation_handle,
       AdBlockService* ad_block_service,
-      AdBlockCustomFiltersService* ad_block_custom_filters_service,
+      AdBlockCustomFiltersSourceProvider*
+          ad_block_custom_filters_source_provider,
       HostContentSettingsMap* content_settings,
       const std::string& locale);
 
@@ -60,7 +62,8 @@ class DomainBlockNavigationThrottle : public content::NavigationThrottle {
   void ShowInterstitial();
 
   AdBlockService* ad_block_service_ = nullptr;
-  AdBlockCustomFiltersService* ad_block_custom_filters_service_ = nullptr;
+  AdBlockCustomFiltersSourceProvider* ad_block_custom_filters_source_provider_ =
+      nullptr;
   HostContentSettingsMap* content_settings_ = nullptr;
   std::string locale_;
   base::WeakPtrFactory<DomainBlockNavigationThrottle> weak_ptr_factory_{this};

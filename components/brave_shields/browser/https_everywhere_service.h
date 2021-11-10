@@ -45,12 +45,13 @@ struct HTTPSE_REDIRECTS_COUNT_ST {
 
 class HTTPSEverywhereService : public BaseBraveShieldsService {
  public:
-  explicit HTTPSEverywhereService(BraveComponent::Delegate* delegate);
+  explicit HTTPSEverywhereService(
+      scoped_refptr<base::SequencedTaskRunner> task_runner);
   ~HTTPSEverywhereService() override;
 
   class Engine : public base::SupportsWeakPtr<Engine> {
    public:
-    Engine(HTTPSEverywhereService* service);
+    explicit Engine(HTTPSEverywhereService* service);
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
@@ -102,7 +103,7 @@ class HTTPSEverywhereService : public BaseBraveShieldsService {
 
 // Creates the HTTPSEverywhereService
 std::unique_ptr<HTTPSEverywhereService> HTTPSEverywhereServiceFactory(
-    BraveComponent::Delegate* delegate);
+    scoped_refptr<base::SequencedTaskRunner> task_runner);
 
 }  // namespace brave_shields
 

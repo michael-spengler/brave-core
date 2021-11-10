@@ -48,8 +48,10 @@ Engine::Engine(const std::string& rules, const bool include_redirect_urls)
     : raw(engine_create_with_redirect_urls(rules.c_str(),
                                            include_redirect_urls)) {}
 
-Engine::Engine(const char* data, size_t data_size)
-    : raw(engine_create_from_buffer(data, data_size)) {}
+Engine::Engine(const char* data,
+               size_t data_size,
+               const bool include_redirect_urls)
+    : raw(engine_create_from_buffer(data, data_size, include_redirect_urls)) {}
 
 void Engine::matches(const std::string& url,
                      const std::string& host,

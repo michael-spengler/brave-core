@@ -13,7 +13,6 @@
 #include "base/metrics/histogram_macros.h"
 #include "base/task/post_task.h"
 #include "base/threading/thread_task_runner_handle.h"
-#include "brave/components/brave_shields/browser/ad_block_custom_filters_service.h"
 #include "brave/components/brave_shields/browser/ad_block_service.h"
 #include "brave/components/brave_shields/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/browser/domain_block_controller_client.h"
@@ -61,27 +60,28 @@ std::unique_ptr<DomainBlockNavigationThrottle>
 DomainBlockNavigationThrottle::MaybeCreateThrottleFor(
     content::NavigationHandle* navigation_handle,
     AdBlockService* ad_block_service,
-    AdBlockCustomFiltersService* ad_block_custom_filters_service,
+    AdBlockCustomFiltersSourceProvider* ad_block_custom_filters_source_provider,
     HostContentSettingsMap* content_settings,
     const std::string& locale) {
-  if (!ad_block_service || !ad_block_custom_filters_service)
+  if (!ad_block_service || !ad_block_custom_filters_source_provider)
     return nullptr;
   if (!base::FeatureList::IsEnabled(brave_shields::features::kBraveDomainBlock))
     return nullptr;
   return std::make_unique<DomainBlockNavigationThrottle>(
-      navigation_handle, ad_block_service, ad_block_custom_filters_service,
-      content_settings, locale);
+      navigation_handle, ad_block_service,
+      ad_block_custom_filters_source_provider, content_settings, locale);
 }
 
 DomainBlockNavigationThrottle::DomainBlockNavigationThrottle(
     content::NavigationHandle* navigation_handle,
     AdBlockService* ad_block_service,
-    AdBlockCustomFiltersService* ad_block_custom_filters_service,
+    AdBlockCustomFiltersSourceProvider* ad_block_custom_filters_source_provider,
     HostContentSettingsMap* content_settings,
     const std::string& locale)
     : content::NavigationThrottle(navigation_handle),
       ad_block_service_(ad_block_service),
-      ad_block_custom_filters_service_(ad_block_custom_filters_service),
+      ad_block_custom_filters_source_provider_(
+          ad_block_custom_filters_source_provider),
       content_settings_(content_settings),
       locale_(locale) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -94,9 +94,6 @@ DomainBlockNavigationThrottle::~DomainBlockNavigationThrottle() {
 content::NavigationThrottle::ThrottleCheckResult
 DomainBlockNavigationThrottle::WillStartRequest() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-
-  if (!ad_block_service_->IsInitialized())
-    return content::NavigationThrottle::PROCEED;
 
   // Don't block subframes
   content::NavigationHandle* handle = navigation_handle();
@@ -170,8 +167,8 @@ void DomainBlockNavigationThrottle::ShowInterstitial() {
   // The controller client implements the actual logic to "go back" or "proceed"
   // from the interstitial.
   auto controller_client = std::make_unique<DomainBlockControllerClient>(
-      web_contents, request_url, ad_block_custom_filters_service_, pref_service,
-      locale_);
+      web_contents, request_url, ad_block_custom_filters_source_provider_,
+      pref_service, locale_);
 
   // This handles populating the HTML template of the interstitial page with
   // localized strings and other information we only know at runtime,
