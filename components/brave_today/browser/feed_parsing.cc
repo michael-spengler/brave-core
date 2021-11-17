@@ -116,7 +116,7 @@ bool ParseFeedItem(const base::Value& feed_item_raw,
 }  // namespace
 
 bool ParseFeedItems(const std::string& json,
-                             std::vector<mojom::FeedItemPtr>* feed_items) {
+                    std::vector<mojom::FeedItemPtr>* feed_items) {
   base::JSONReader::ValueWithError value_with_error =
       base::JSONReader::ReadAndReturnValueWithError(
           json, base::JSONParserOptions::JSON_PARSE_RFC);

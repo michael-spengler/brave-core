@@ -19,6 +19,7 @@
 #include "brave/components/brave_ads/browser/ads_service.h"
 #include "brave/components/brave_private_cdn/headers.h"
 #include "brave/components/brave_private_cdn/private_cdn_helper.h"
+#include "brave/components/brave_today/browser/direct_feed_controller.h"
 #include "brave/components/brave_today/browser/network.h"
 #include "brave/components/brave_today/common/brave_news.mojom-forward.h"
 #include "brave/components/brave_today/common/brave_news.mojom-shared.h"
@@ -50,7 +51,7 @@ void BraveNewsController::RegisterProfilePrefs(PrefRegistrySimple* registry) {
                                 brave_news_enabled_default);
   registry->RegisterBooleanPref(prefs::kBraveTodayOptedIn, false);
   registry->RegisterDictionaryPref(prefs::kBraveTodaySources);
-  registry->RegisterDictionaryPref(prefs::kBraveTodayFeeds);
+  registry->RegisterDictionaryPref(prefs::kBraveTodayDirectFeeds);
   // P3A
   registry->RegisterListPref(prefs::kBraveTodayWeeklySessionCount);
   registry->RegisterListPref(prefs::kBraveTodayWeeklyCardViewsCount);
@@ -67,7 +68,9 @@ BraveNewsController::BraveNewsController(
       ads_service_(ads_service),
       api_request_helper_(GetNetworkTrafficAnnotationTag(), url_loader_factory),
       publishers_controller_(prefs, &api_request_helper_),
+      direct_feed_controller_(prefs, &api_request_helper_),
       feed_controller_(&publishers_controller_,
+                       &direct_feed_controller_,
                        history_service,
                        &api_request_helper_),
       weak_ptr_factory_(this) {
@@ -114,6 +117,38 @@ void BraveNewsController::GetPublishers(GetPublishersCallback callback) {
   publishers_controller_.GetOrFetchPublishers(std::move(callback));
 }
 
+void BraveNewsController::VerifyDirectFeedAtUrl(
+    const GURL& feed_url,
+    VerifyDirectFeedAtUrlCallback callback) {
+  direct_feed_controller_.VerifyFeedUrl(
+      feed_url,
+      base::BindOnce(
+          [](VerifyDirectFeedAtUrlCallback callback, const bool is_valid) {
+            std::move(callback).Run(is_valid);
+          },
+          std::move(callback)));
+}
+
+void BraveNewsController::SubscribeToNewDirectFeed(
+    const GURL& feed_url,
+    SubscribeToNewDirectFeedCallback callback) {
+  // We use a dictionary pref, but that's to reserve space for more future
+  // customization on a feed. For now we just store a bool, and remove
+  // the entire entry if a user unsubscribes from a user feed.
+  DictionaryPrefUpdate update(prefs_, prefs::kBraveTodayDirectFeeds);
+  update->SetBoolKey(feed_url.spec(), true);
+  // Mark feed as requiring update
+  publishers_controller_.EnsurePublishersIsUpdating();
+  GetPublishers(std::move(callback));
+}
+
+void BraveNewsController::RemoveDirectFeed(const GURL& feed_url) {
+  DictionaryPrefUpdate update(prefs_, prefs::kBraveTodayDirectFeeds);
+  update->RemoveKey(feed_url.spec());
+  // Mark feed as requiring update
+  publishers_controller_.EnsurePublishersIsUpdating();
+}
+
 void BraveNewsController::GetImageData(const GURL& padded_image_url,
                                        GetImageDataCallback callback) {
   // Validate
@@ -126,8 +161,9 @@ void BraveNewsController::GetImageData(const GURL& padded_image_url,
   // Handler url download response
   const auto file_name = padded_image_url.path();
   const std::string ending = ".pad";
-  const bool is_padded = (file_name.compare(
-          file_name.length() - ending.length(), ending.length(), ending) == 0);
+  const bool is_padded =
+      (file_name.compare(file_name.length() - ending.length(), ending.length(),
+                         ending) == 0);
   VLOG(3) << "is padded: " << is_padded;
   auto onPaddedImageResponse = base::BindOnce(
       [](GetImageDataCallback callback, const bool is_padded, const int status,
@@ -135,9 +171,10 @@ void BraveNewsController::GetImageData(const GURL& padded_image_url,
          const base::flat_map<std::string, std::string>& headers) {
         // Attempt to remove byte padding if applicable
         base::StringPiece body_payload(body.data(), body.size());
-        if (status < 200 || status >= 300 || (is_padded &&
-            !brave::PrivateCdnHelper::GetInstance()->RemovePadding(
-                  &body_payload))) {
+        if (status < 200 || status >= 300 ||
+            (is_padded &&
+             !brave::PrivateCdnHelper::GetInstance()->RemovePadding(
+                 &body_payload))) {
           // Byte padding removal failed
           absl::optional<std::vector<uint8_t>> args;
           std::move(callback).Run(std::move(args));

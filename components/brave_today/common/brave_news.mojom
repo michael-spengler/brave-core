@@ -102,6 +102,10 @@ struct DisplayAd {
 interface BraveNewsController {
   GetFeed() => (Feed feed);
   GetPublishers() => (map<string, Publisher> publishers);
+  VerifyDirectFeedAtUrl(url.mojom.Url feed_url) => (bool is_valid_feed);
+  SubscribeToNewDirectFeed(url.mojom.Url feed_url)
+    => (map<string, Publisher> publishers);
+  RemoveDirectFeed(url.mojom.Url feed_url);
   GetImageData(url.mojom.Url padded_image_url) => (array<uint8>? image_data);
   SetPublisherPref(string publisher_id, UserEnabled new_status);
   ClearPrefs();

@@ -12,7 +12,7 @@
 namespace brave_news {
 
 bool ParseFeedItems(const std::string& json,
-                             std::vector<mojom::FeedItemPtr>* feed_items);
+                    std::vector<mojom::FeedItemPtr>* feed_items);
 
 }  // namespace brave_news
 

@@ -106,16 +106,20 @@ void PublishersController::EnsurePublishersIsUpdating() {
           }
         }
         // Add direct publishers (rss feeds)
-        for (auto const url : kTemporaryHardcodedFeedUrls) {
+        const base::DictionaryValue* direct_feeds_pref =
+            controller->prefs_->GetDictionary(prefs::kBraveTodayDirectFeeds);
+        for (auto const kv : direct_feeds_pref->DictItems()) {
+          GURL feed_url(kv.first);
           auto publisher = mojom::Publisher::New();
-          publisher->publisher_id = "direct:" + GURL(url).spec();
+          publisher->publisher_id = "direct:" + feed_url.spec();
+          // TODO(petemill): use a is_user_feed property
           publisher->category_name = "User feeds";
           publisher->is_enabled = true;
           publisher->user_enabled_status = mojom::UserEnabled::NOT_MODIFIED;
           // TODO(petemill): get publisher name
-          publisher->publisher_name = GURL(url).host();
-          publisher_list.insert_or_assign(
-              publisher->publisher_id, std::move(publisher));
+          publisher->publisher_name = feed_url.host();
+          publisher_list.insert_or_assign(publisher->publisher_id,
+                                          std::move(publisher));
         }
         // Set memory cache
         controller->publishers_ = std::move(publisher_list);

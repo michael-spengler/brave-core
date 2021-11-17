@@ -25,12 +25,12 @@ namespace brave_news {
 
 using GetFeedCallback = mojom::BraveNewsController::GetFeedCallback;
 using FeedItems = std::vector<mojom::FeedItemPtr>;
-using GetFeedItemsCallback =
-    base::OnceCallback<void(FeedItems)>;
+using GetFeedItemsCallback = base::OnceCallback<void(FeedItems)>;
 
 class FeedController : public PublishersController::Observer {
  public:
   FeedController(PublishersController* publishers_controller,
+                 DirectFeedController* direct_feed_controller,
                  history::HistoryService* history_service,
                  api_request_helper::APIRequestHelper* api_request_helper);
   ~FeedController() override;
@@ -68,10 +68,10 @@ class FeedController : public PublishersController::Observer {
   void NotifyUpdateDone();
 
   PublishersController* publishers_controller_;
+  DirectFeedController* direct_feed_controller_;
   history::HistoryService* history_service_;
   api_request_helper::APIRequestHelper* api_request_helper_;
 
-  DirectFeedController direct_feed_controller_;
   // The task tracker for the HistoryService callbacks.
   base::CancelableTaskTracker task_tracker_;
   // Internal callers subscribe to this to know when the current in-progress
