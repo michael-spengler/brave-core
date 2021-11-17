@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/json/json_reader.h"
 #include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
@@ -253,46 +252,18 @@ bool ShouldDisplayFeedItem(const mojom::FeedItemPtr& feed_item,
 
 }  // namespace
 
-bool ParseFeedItemsToDisplay(const std::string& json,
-                             Publishers* publishers,
-                             std::vector<mojom::FeedItemPtr>* feed_items) {
-  base::JSONReader::ValueWithError value_with_error =
-      base::JSONReader::ReadAndReturnValueWithError(
-          json, base::JSONParserOptions::JSON_PARSE_RFC);
-  absl::optional<base::Value>& records_v = value_with_error.value;
-  if (!records_v) {
-    LOG(ERROR) << "Invalid response, could not parse JSON, JSON is: " << json;
-    return false;
-  }
-  if (!records_v->is_list()) {
-    return false;
-  }
-  for (const base::Value& feed_item_raw : records_v->GetList()) {
-    auto item = mojom::FeedItem::New();
-    std::string item_hash;
-    if (ParseFeedItem(feed_item_raw, &item)) {
-      if (!ShouldDisplayFeedItem(item, publishers)) {
-        continue;
-      }
-      feed_items->push_back(std::move(item));
-    }
-  }
-  return true;
-}
-
-bool BuildFeed(const std::string& json,
+bool BuildFeed(std::vector<mojom::FeedItemPtr>& feed_items,
                const std::unordered_set<std::string>& history_hosts,
                Publishers* publishers,
                mojom::Feed* feed) {
-  std::vector<mojom::FeedItemPtr> feed_items;
-  if (!ParseFeedItemsToDisplay(json, publishers, &feed_items)) {
-    return false;
-  }
   std::list<mojom::ArticlePtr> articles;
   std::list<mojom::PromotedArticlePtr> promoted_articles;
   std::list<mojom::DealPtr> deals;
   std::hash<std::string> hasher;
   for (auto& item : feed_items) {
+    if (!ShouldDisplayFeedItem(item, publishers)) {
+      continue;
+    }
     // Adjust score to consider profile's browsing history
     auto& metadata = MetadataFromFeedItem(item);
     if (history_hosts.find(metadata->url.host()) != history_hosts.end()) {

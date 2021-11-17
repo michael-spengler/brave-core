@@ -10,12 +10,14 @@
 #include <unordered_set>
 #include <utility>
 
+#include "base/barrier_callback.h"
 #include "base/bind.h"
 #include "base/callback_forward.h"
 #include "base/one_shot_event.h"
 #include "brave/components/api_request_helper/api_request_helper.h"
 #include "brave/components/brave_private_cdn/headers.h"
 #include "brave/components/brave_today/browser/feed_building.h"
+#include "brave/components/brave_today/browser/feed_parsing.h"
 #include "brave/components/brave_today/browser/publishers_controller.h"
 #include "brave/components/brave_today/browser/urls.h"
 #include "brave/components/brave_today/common/brave_news.mojom.h"
@@ -43,6 +45,7 @@ FeedController::FeedController(
     : publishers_controller_(publishers_controller),
       history_service_(history_service),
       api_request_helper_(api_request_helper),
+      direct_feed_controller_(api_request_helper),
       on_current_update_complete_(new base::OneShotEvent()),
       publishers_observation_(this) {
   publishers_observation_.Observe(publishers_controller);
@@ -92,26 +95,32 @@ void FeedController::EnsureFeedIsUpdating() {
   // TODO(petemill): avoid callback hell when c++ allows
   // us to do Promise.all and do call these 3 async functions
   // in parallel.
-  auto onRequest = base::BindOnce(
-      [](FeedController* controller, int status, const std::string& body,
-         const base::flat_map<std::string, std::string>& headers) {
-        std::string etag;
-        if (headers.contains(kEtagHeaderKey)) {
-          etag = headers.at(kEtagHeaderKey);
+  auto feed_items_handler = base::BindOnce(
+      [](FeedController* controller, std::vector<FeedItems> feed_items_unflat) {
+        // flatten the vectors
+        std::size_t total_size = 0;
+        for (const auto& collection : feed_items_unflat) {
+          total_size += collection.size();
         }
-        VLOG(1) << "Downloaded feed, status: " << status << " etag: " << etag;
-        // Handle bad response
-        if (status < 200 || status >= 300) {
-          LOG(ERROR) << "Bad response from brave news feed.json. Status: "
-                     << status;
+        VLOG(1) << "All feed item fetches done with item count: " << total_size;
+        if (total_size == 0) {
           controller->NotifyUpdateDone();
           return;
+        }
+        FeedItems all_feed_items;
+        all_feed_items.reserve(total_size);
+        for (auto& collection : feed_items_unflat) {
+          auto it = collection.begin();
+          while (it != collection.end()) {
+            all_feed_items.insert(all_feed_items.end(), *std::make_move_iterator(it));
+            it = collection.erase(it);
+          }
         }
 
         // Fetch publishers via callback
         auto onPublishers = base::BindOnce(
-            [](FeedController* controller, const std::string& body,
-               const std::string& etag, Publishers publishers) {
+            [](FeedController* controller, FeedItems all_feed_items,
+              Publishers publishers) {
               // Handle no publishers
               if (publishers.empty()) {
                 LOG(ERROR) << "Brave News Publisher list was empty";
@@ -120,9 +129,8 @@ void FeedController::EnsureFeedIsUpdating() {
               }
               // Get history hosts via callback
               auto onHistory = base::BindOnce(
-                  [](FeedController* controller, const std::string& body,
-                     const std::string& etag, Publishers publishers,
-                     history::QueryResults results) {
+                  [](FeedController* controller, FeedItems all_feed_items,
+                     Publishers publishers, history::QueryResults results) {
                     std::unordered_set<std::string> history_hosts;
                     for (const auto& item : results) {
                       auto host = item.url().host();
@@ -131,19 +139,17 @@ void FeedController::EnsureFeedIsUpdating() {
                     VLOG(1) << "history hosts # " << history_hosts.size();
                     // Parse directly to in-memory property
                     controller->ResetFeed();
-                    if (BuildFeed(body, history_hosts, &publishers,
+                    std::vector<mojom::FeedItemPtr> feed_items;
+                    if (BuildFeed(all_feed_items, history_hosts, &publishers,
                                   &controller->current_feed_)) {
-                      // Only mark cache time of remote request if
-                      // parsing was successful
-                      controller->current_feed_etag_ = etag;
                     } else {
                       VLOG(1) << "ParseFeed reported failure.";
                     }
                     // Let any callbacks know that the data is ready or errored.
                     controller->NotifyUpdateDone();
                   },
-                  base::Unretained(controller), std::move(body),
-                  std::move(etag), std::move(publishers));
+                  base::Unretained(controller), std::move(all_feed_items),
+                  std::move(publishers));
               history::QueryOptions options;
               options.max_count = 2000;
               options.SetRecentDayRange(14);
@@ -151,16 +157,16 @@ void FeedController::EnsureFeedIsUpdating() {
                   std::u16string(), options, std::move(onHistory),
                   &controller->task_tracker_);
             },
-            base::Unretained(controller), std::move(body), std::move(etag));
+            base::Unretained(controller), std::move(all_feed_items));
         controller->publishers_controller_->GetOrFetchPublishers(
             std::move(onPublishers));
       },
       base::Unretained(this));
-  GURL feed_url(GetFeedUrl());
-  VLOG(1) << "Making feed request to " << feed_url.spec();
-  api_request_helper_->Request("GET", feed_url, "", "", true,
-                               std::move(onRequest),
-                               brave::private_cdn_headers);
+  // Perform all feed downloads in parallel
+  auto fetch_items_handler = base::BarrierCallback<FeedItems>(
+      2, std::move(feed_items_handler));
+  FetchPrivateFeed(fetch_items_handler);
+  direct_feed_controller_.DownloadAllContent(fetch_items_handler);
 }
 
 void FeedController::EnsureFeedIsCached() {
@@ -220,6 +226,41 @@ void FeedController::ClearCache() {
 void FeedController::OnPublishersUpdated(PublishersController* controller) {
   VLOG(1) << "OnPublishersUpdated";
   EnsureFeedIsUpdating();
+}
+
+void FeedController::FetchPrivateFeed(GetFeedItemsCallback callback) {
+  // Handle the response
+  auto response_handler = base::BindOnce(
+    [](FeedController* controller, GetFeedItemsCallback callback, int status, const std::string& body,
+         const base::flat_map<std::string, std::string>& headers) {
+      std::string etag;
+      if (headers.contains(kEtagHeaderKey)) {
+        etag = headers.at(kEtagHeaderKey);
+      }
+      VLOG(1) << "Downloaded feed, status: " << status << " etag: " << etag;
+      // Handle bad response
+      if (status < 200 || status >= 300) {
+        LOG(ERROR) << "Bad response from brave news feed.json. Status: "
+                    << status;
+        std::move(callback).Run({});
+        return;
+      }
+      // Only mark cache time of remote request if
+      // parsing was successful
+      controller->current_feed_etag_ = etag;
+      FeedItems feed_items;
+      // std::unique_ptr<FeedItems> feed_items;
+      // ParseFeedItems(body, feed_items.get());
+      ParseFeedItems(body, &feed_items);
+      // std::move(callback).Run(std::move(*feed_items.get()));
+      std::move(callback).Run(std::move(feed_items));
+    }, base::Unretained(this), std::move(callback));
+  // Send the request
+  GURL feed_url(GetFeedUrl());
+  VLOG(1) << "Making feed request to " << feed_url.spec();
+  api_request_helper_->Request("GET", feed_url, "", "", true,
+                               std::move(response_handler),
+                               brave::private_cdn_headers);
 }
 
 void FeedController::GetOrFetchFeed(base::OnceClosure callback) {

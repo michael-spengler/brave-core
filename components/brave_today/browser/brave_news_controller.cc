@@ -50,6 +50,7 @@ void BraveNewsController::RegisterProfilePrefs(PrefRegistrySimple* registry) {
                                 brave_news_enabled_default);
   registry->RegisterBooleanPref(prefs::kBraveTodayOptedIn, false);
   registry->RegisterDictionaryPref(prefs::kBraveTodaySources);
+  registry->RegisterDictionaryPref(prefs::kBraveTodayFeeds);
   // P3A
   registry->RegisterListPref(prefs::kBraveTodayWeeklySessionCount);
   registry->RegisterListPref(prefs::kBraveTodayWeeklyCardViewsCount);
@@ -115,28 +116,40 @@ void BraveNewsController::GetPublishers(GetPublishersCallback callback) {
 
 void BraveNewsController::GetImageData(const GURL& padded_image_url,
                                        GetImageDataCallback callback) {
+  // Validate
+  VLOG(2) << "getimagedata " << padded_image_url.spec();
+  if (!padded_image_url.is_valid()) {
+    absl::optional<std::vector<uint8_t>> args;
+    std::move(callback).Run(std::move(args));
+    return;
+  }
   // Handler url download response
+  const auto file_name = padded_image_url.path();
+  const std::string ending = ".pad";
+  const bool is_padded = (file_name.compare(
+          file_name.length() - ending.length(), ending.length(), ending) == 0);
+  VLOG(3) << "is padded: " << is_padded;
   auto onPaddedImageResponse = base::BindOnce(
-      [](GetImageDataCallback callback, const int status,
+      [](GetImageDataCallback callback, const bool is_padded, const int status,
          const std::string& body,
          const base::flat_map<std::string, std::string>& headers) {
-        // Attempt to remove byte padding
+        // Attempt to remove byte padding if applicable
         base::StringPiece body_payload(body.data(), body.size());
-        if (status < 200 || status >= 300 ||
+        if (status < 200 || status >= 300 || (is_padded &&
             !brave::PrivateCdnHelper::GetInstance()->RemovePadding(
-                &body_payload)) {
+                  &body_payload))) {
           // Byte padding removal failed
           absl::optional<std::vector<uint8_t>> args;
           std::move(callback).Run(std::move(args));
           return;
         }
-        // Unpadding was successful, uint8Array will be easier to move over
-        // mojom
+        // Download (and optional unpadding) was successful,
+        // uint8Array will be easier to move over mojom.
         std::vector<uint8_t> image_bytes(body_payload.begin(),
                                          body_payload.end());
         std::move(callback).Run(image_bytes);
       },
-      std::move(callback));
+      std::move(callback), is_padded);
   api_request_helper_.Request("GET", padded_image_url, "", "", true,
                               std::move(onPaddedImageResponse),
                               brave::private_cdn_headers);

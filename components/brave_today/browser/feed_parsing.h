@@ -11,8 +11,8 @@
 
 namespace brave_news {
 
-bool ParseFeedItem(const base::Value& feed_item_raw,
-                   mojom::FeedItemPtr* feed_item);
+bool ParseFeedItems(const std::string& json,
+                             std::vector<mojom::FeedItemPtr>* feed_items);
 
 }  // namespace brave_news
 

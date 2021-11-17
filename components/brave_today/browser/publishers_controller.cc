@@ -13,8 +13,10 @@
 #include "base/one_shot_event.h"
 #include "brave/components/api_request_helper/api_request_helper.h"
 #include "brave/components/brave_private_cdn/headers.h"
+#include "brave/components/brave_today/browser/direct_feed_controller.h"
 #include "brave/components/brave_today/browser/publishers_parsing.h"
 #include "brave/components/brave_today/browser/urls.h"
+#include "brave/components/brave_today/common/brave_news.mojom-shared.h"
 #include "brave/components/brave_today/common/pref_names.h"
 
 namespace brave_news {
@@ -102,6 +104,18 @@ void PublishersController::EnsurePublishersIsUpdating() {
                        "user prefs: "
                     << publisher_id;
           }
+        }
+        // Add direct publishers (rss feeds)
+        for (auto const url : kTemporaryHardcodedFeedUrls) {
+          auto publisher = mojom::Publisher::New();
+          publisher->publisher_id = "direct:" + GURL(url).spec();
+          publisher->category_name = "User feeds";
+          publisher->is_enabled = true;
+          publisher->user_enabled_status = mojom::UserEnabled::NOT_MODIFIED;
+          // TODO(petemill): get publisher name
+          publisher->publisher_name = GURL(url).host();
+          publisher_list.insert_or_assign(
+              publisher->publisher_id, std::move(publisher));
         }
         // Set memory cache
         controller->publishers_ = std::move(publisher_list);
