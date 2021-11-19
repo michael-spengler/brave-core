@@ -32,7 +32,9 @@ struct IssuersInfo;
 struct WalletInfo;
 
 namespace privacy {
+namespace cbr {
 class TokenGeneratorInterface;
+}  // namespace cbr
 }  // namespace privacy
 
 class Account final : public ConfirmationsObserver,
@@ -40,7 +42,7 @@ class Account final : public ConfirmationsObserver,
                       public RedeemUnblindedPaymentTokensDelegate,
                       public RefillUnblindedTokensDelegate {
  public:
-  explicit Account(privacy::TokenGeneratorInterface* token_generator);
+  explicit Account(privacy::cbr::TokenGeneratorInterface* token_generator);
   ~Account() override;
 
   void AddObserver(AccountObserver* observer);
@@ -98,6 +100,7 @@ class Account final : public ConfirmationsObserver,
   // ConfirmationsObserver:
   void OnDidConfirm(const ConfirmationInfo& confirmation) override;
   void OnFailedToConfirm(const ConfirmationInfo& confirmation) override;
+  void OnIssuersOutOfDate() override;
 
   // RedeemUnblindedPaymentTokensDelegate:
   void OnDidRedeemUnblindedPaymentTokens(

@@ -14,11 +14,14 @@ struct ConfirmationInfo;
 
 class ConfirmationsObserver : public base::CheckedObserver {
  public:
-  // Invoked when a confirmation was successfully successfully sent
+  // Invoked when a confirmation was successfully sent
   virtual void OnDidConfirm(const ConfirmationInfo& confirmation) {}
 
   // Invoked when a confirmation failed to send
   virtual void OnFailedToConfirm(const ConfirmationInfo& confirmation) {}
+
+  // Invoked when issuers are out of date
+  virtual void OnIssuersOutOfDate() {}
 
  protected:
   ~ConfirmationsObserver() override = default;

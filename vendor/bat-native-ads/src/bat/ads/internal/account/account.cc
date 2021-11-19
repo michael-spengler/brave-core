@@ -23,7 +23,9 @@
 #include "bat/ads/internal/database/tables/transactions_database_table_aliases.h"
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/privacy/tokens/token_generator_interface.h"
+#include "bat/ads/internal/privacy/unblinded_payment_tokens/unblinded_payment_tokens.h"
 #include "bat/ads/internal/privacy/unblinded_tokens/unblinded_tokens.h"
+#include "bat/ads/internal/time_formatting_util.h"
 #include "bat/ads/internal/tokens/issuers/issuer_types.h"
 #include "bat/ads/internal/tokens/issuers/issuers.h"
 #include "bat/ads/internal/tokens/issuers/issuers_info.h"
@@ -36,7 +38,7 @@
 
 namespace ads {
 
-Account::Account(privacy::TokenGeneratorInterface* token_generator)
+Account::Account(privacy::cbr::TokenGeneratorInterface* token_generator)
     : issuers_(std::make_unique<Issuers>()),
       confirmations_(std::make_unique<Confirmations>(token_generator)),
       redeem_unblinded_payment_tokens_(
@@ -258,13 +260,42 @@ void Account::OnFailedToGetIssuers() {
 void Account::OnDidConfirm(const ConfirmationInfo& confirmation) {
   DCHECK(confirmation.IsValid());
 
+  const int unblinded_payment_tokens_count =
+      ConfirmationsState::Get()->get_unblinded_payment_tokens()->Count();
+
+  const base::Time& next_token_redemption_at = base::Time::FromDoubleT(
+      AdsClientHelper::Get()->GetDoublePref(prefs::kNextTokenRedemptionAt));
+
+  BLOG(1, "Successfully redeemed unblinded token for "
+              << std::string(confirmation.ad_type) << " with confirmation id "
+              << confirmation.id << ", transaction id "
+              << confirmation.transaction_id << ", creative instance id "
+              << confirmation.creative_instance_id << " and "
+              << std::string(confirmation.type) << ". You now have "
+              << unblinded_payment_tokens_count
+              << " unblinded payment tokens which will be redeemed "
+              << FriendlyDateAndTime(next_token_redemption_at));
+
   TopUpUnblindedTokens();
 }
 
 void Account::OnFailedToConfirm(const ConfirmationInfo& confirmation) {
   DCHECK(confirmation.IsValid());
 
+  BLOG(1, "Failed to redeem unblinded token for "
+              << std::string(confirmation.ad_type) << " with confirmation id "
+              << confirmation.id << ", transaction id "
+              << confirmation.transaction_id << ", creative instance id "
+              << confirmation.creative_instance_id << " and "
+              << std::string(confirmation.type));
+
   TopUpUnblindedTokens();
+}
+
+void Account::OnIssuersOutOfDate() {
+  BLOG(1, "Issuers are out of date");
+
+  MaybeGetIssuers();
 }
 
 void Account::OnDidRedeemUnblindedPaymentTokens(

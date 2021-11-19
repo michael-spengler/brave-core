@@ -12,6 +12,7 @@
 #include "base/observer_list.h"
 #include "bat/ads/internal/account/confirmations/confirmations_observer.h"
 #include "bat/ads/internal/backoff_timer.h"
+#include "bat/ads/internal/privacy/tokens/token_aliases.h"
 #include "bat/ads/internal/tokens/redeem_unblinded_token/redeem_unblinded_token_delegate.h"
 
 namespace base {
@@ -26,13 +27,16 @@ class RedeemUnblindedToken;
 struct TransactionInfo;
 
 namespace privacy {
+namespace cbr {
 class TokenGeneratorInterface;
+}  // namespace cbr
 struct UnblindedPaymentTokenInfo;
 }  // namespace privacy
 
 class Confirmations final : public RedeemUnblindedTokenDelegate {
  public:
-  explicit Confirmations(privacy::TokenGeneratorInterface* token_generator);
+  explicit Confirmations(
+      privacy::cbr::TokenGeneratorInterface* token_generator);
   ~Confirmations() override;
 
   void AddObserver(ConfirmationsObserver* observer);
@@ -45,7 +49,7 @@ class Confirmations final : public RedeemUnblindedTokenDelegate {
  private:
   base::ObserverList<ConfirmationsObserver> observers_;
 
-  privacy::TokenGeneratorInterface* token_generator_;  // NOT OWNED
+  privacy::cbr::TokenGeneratorInterface* token_generator_;  // NOT OWNED
 
   std::unique_ptr<RedeemUnblindedToken> redeem_unblinded_token_;
 
@@ -54,12 +58,15 @@ class Confirmations final : public RedeemUnblindedTokenDelegate {
       const std::string& creative_instance_id,
       const ConfirmationType& confirmation_type,
       const AdType& ad_type,
+      const double value,
       const base::DictionaryValue& user_data) const;
 
   BackoffTimer retry_timer_;
   void Retry();
   void OnRetry();
   void StopRetrying();
+
+  privacy::cbr::TokenList GenerateTokensForValue(const double value) const;
 
   void CreateNewConfirmationAndAppendToRetryQueue(
       const ConfirmationInfo& confirmation);
@@ -68,6 +75,7 @@ class Confirmations final : public RedeemUnblindedTokenDelegate {
 
   void NotifyDidConfirm(const ConfirmationInfo& confirmation) const;
   void NotifyFailedToConfirm(const ConfirmationInfo& confirmation) const;
+  void NotifyIssuersOutOfDate() const;
 
   // RedeemUnblindedTokenDelegate:
   void OnDidSendConfirmation(const ConfirmationInfo& confirmation) override;
@@ -76,6 +84,7 @@ class Confirmations final : public RedeemUnblindedTokenDelegate {
                                      unblinded_payment_token) override;
   void OnFailedToRedeemUnblindedToken(const ConfirmationInfo& confirmation,
                                       const bool should_retry) override;
+  void OnIssuersOutOfDate() override;
 };
 
 }  // namespace ads

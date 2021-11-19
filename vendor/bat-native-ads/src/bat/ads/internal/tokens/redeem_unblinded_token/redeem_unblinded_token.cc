@@ -22,6 +22,7 @@
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/logging_util.h"
 #include "bat/ads/internal/privacy/challenge_bypass_ristretto_util.h"
+#include "bat/ads/internal/privacy/tokens/token_aliases.h"
 #include "bat/ads/internal/privacy/unblinded_payment_tokens/unblinded_payment_token_info.h"
 #include "bat/ads/internal/security/confirmations/confirmations_util.h"
 #include "bat/ads/internal/tokens/issuers/issuer_types.h"
@@ -97,6 +98,18 @@ void RedeemUnblindedToken::OnCreateConfirmation(
     // confirmations as we cannot guarantee if the confirmation was created or
     // not, i.e. after an internal server error 500
     BLOG(1, "Duplicate/bad confirmation");
+  }
+
+  if (url_response.status_code == net::HTTP_EXPECTATION_FAILED) {
+    BLOG(1, "Expectation failed");
+
+    if (delegate_) {
+      delegate_->OnIssuersOutOfDate();
+    }
+
+    OnFailedToRedeemUnblindedToken(confirmation, /* should_retry */ true);
+
+    return;
   }
 
   if (url_response.status_code == 418) {  // I'm a teapot
@@ -214,7 +227,7 @@ void RedeemUnblindedToken::OnFetchPaymentToken(
   }
 
   PublicKey public_key = PublicKey::decode_base64(*public_key_base64);
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     BLOG(0, "Invalid public key");
     NOTREACHED();
     OnFailedToRedeemUnblindedToken(confirmation, /* should_retry */ true);
@@ -239,7 +252,7 @@ void RedeemUnblindedToken::OnFetchPaymentToken(
   }
   BatchDLEQProof batch_dleq_proof =
       BatchDLEQProof::decode_base64(*batch_dleq_proof_base64);
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     BLOG(0, "Invalid batch DLEQ proof");
     NOTREACHED();
     OnFailedToRedeemUnblindedToken(confirmation, /* should_retry */ true);
@@ -255,18 +268,12 @@ void RedeemUnblindedToken::OnFetchPaymentToken(
     return;
   }
 
-  if (signed_tokens_list->GetList().size() != 1) {
-    BLOG(0, "Response has too many signedTokens");
-    OnFailedToRedeemUnblindedToken(confirmation, /* should_retry */ true);
-    return;
-  }
-
-  std::vector<SignedToken> signed_tokens;
+  privacy::cbr::SignedTokenList signed_tokens;
   for (const auto& value : signed_tokens_list->GetList()) {
     DCHECK(value.is_string());
     const std::string signed_token_base64 = value.GetString();
     SignedToken signed_token = SignedToken::decode_base64(signed_token_base64);
-    if (privacy::ExceptionOccurred()) {
+    if (privacy::cbr::ExceptionOccurred()) {
       BLOG(0, "Invalid signed token");
       NOTREACHED();
       continue;
@@ -276,15 +283,11 @@ void RedeemUnblindedToken::OnFetchPaymentToken(
   }
 
   // Verify and unblind tokens
-  const std::vector<Token> tokens = {confirmation.payment_token};
-
-  const std::vector<BlindedToken> blinded_tokens = {
-      confirmation.blinded_payment_token};
-
-  const std::vector<UnblindedToken> batch_dleq_proof_unblinded_tokens =
-      batch_dleq_proof.verify_and_unblind(tokens, blinded_tokens, signed_tokens,
-                                          public_key);
-  if (privacy::ExceptionOccurred()) {
+  const privacy::cbr::UnblindedTokenList& batch_dleq_proof_unblinded_tokens =
+      batch_dleq_proof.verify_and_unblind(confirmation.tokens,
+                                          confirmation.blinded_tokens,
+                                          signed_tokens, public_key);
+  if (privacy::cbr::ExceptionOccurred()) {
     BLOG(1, "Failed to verify and unblind tokens");
     BLOG(1, "  Batch proof: " << *batch_dleq_proof_base64);
     BLOG(1, "  Public key: " << *public_key_base64);

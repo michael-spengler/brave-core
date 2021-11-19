@@ -113,6 +113,10 @@ RedeemUnblindedPaymentTokensUrlRequestBuilder::CreatePaymentRequestDTO(
     payment_credential.SetKey("credential", base::Value(std::move(credential)));
 
     payment_credential.SetKey(
+        "creativeType",
+        base::Value(std::string(unblinded_payment_token.ad_type)));
+
+    payment_credential.SetKey(
         "confirmationType",
         base::Value(std::string(unblinded_payment_token.confirmation_type)));
 
@@ -136,26 +140,26 @@ base::Value RedeemUnblindedPaymentTokensUrlRequestBuilder::CreateCredential(
   VerificationKey verification_key =
       unblinded_payment_token.value.derive_verification_key();
   VerificationSignature verification_signature = verification_key.sign(payload);
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     NOTREACHED();
     return credential;
   }
 
   const std::string verification_signature_base64 =
       verification_signature.encode_base64();
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     NOTREACHED();
     return credential;
   }
 
   TokenPreimage token_preimage = unblinded_payment_token.value.preimage();
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     NOTREACHED();
     return credential;
   }
 
   const std::string token_preimage_base64 = token_preimage.encode_base64();
-  if (privacy::ExceptionOccurred()) {
+  if (privacy::cbr::ExceptionOccurred()) {
     NOTREACHED();
     return credential;
   }

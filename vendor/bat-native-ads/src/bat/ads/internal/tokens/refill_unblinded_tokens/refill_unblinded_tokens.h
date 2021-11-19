@@ -13,23 +13,22 @@
 #include "base/memory/weak_ptr.h"
 #include "bat/ads/internal/account/wallet/wallet_info.h"
 #include "bat/ads/internal/backoff_timer.h"
+#include "bat/ads/internal/privacy/tokens/token_aliases.h"
 #include "bat/ads/internal/tokens/refill_unblinded_tokens/refill_unblinded_tokens_delegate.h"
 #include "bat/ads/public/interfaces/ads.mojom.h"
-#include "wrapper.hpp"
 
 namespace ads {
 
-using challenge_bypass_ristretto::BlindedToken;
-using challenge_bypass_ristretto::Token;
-
 namespace privacy {
+namespace cbr {
 class TokenGeneratorInterface;
+}  // namespace cbr
 }  // namespace privacy
 
 class RefillUnblindedTokens final {
  public:
   explicit RefillUnblindedTokens(
-      privacy::TokenGeneratorInterface* token_generator);
+      privacy::cbr::TokenGeneratorInterface* token_generator);
   ~RefillUnblindedTokens();
 
   void set_delegate(RefillUnblindedTokensDelegate* delegate) {
@@ -44,8 +43,8 @@ class RefillUnblindedTokens final {
 
   std::string nonce_;
 
-  std::vector<Token> tokens_;
-  std::vector<BlindedToken> blinded_tokens_;
+  privacy::cbr::TokenList tokens_;
+  privacy::cbr::BlindedTokenList blinded_tokens_;
 
   void Refill();
 
@@ -69,7 +68,7 @@ class RefillUnblindedTokens final {
 
   bool is_processing_ = false;
 
-  privacy::TokenGeneratorInterface* token_generator_;  // NOT OWNED
+  privacy::cbr::TokenGeneratorInterface* token_generator_;  // NOT OWNED
 
   RefillUnblindedTokensDelegate* delegate_ = nullptr;
 
