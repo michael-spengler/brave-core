@@ -115,7 +115,7 @@ TEST_F(BatAdsConversionsTest, ConvertViewedAd) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -156,7 +156,7 @@ TEST_F(BatAdsConversionsTest, ConvertClickedAd) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -220,7 +220,7 @@ TEST_F(BatAdsConversionsTest, ConvertMultipleAds) {
       [&conversions](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(2UL, ad_events.size());
+        ASSERT_EQ(2UL, ad_events.size());
 
         const ConversionInfo conversion_1 = conversions.at(0);
         const AdEventInfo ad_event_1 = ad_events.at(1);
@@ -266,7 +266,7 @@ TEST_F(BatAdsConversionsTest, ConvertViewedAdWhenAdWasDismissed) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -411,7 +411,7 @@ TEST_F(BatAdsConversionsTest,
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -487,7 +487,7 @@ TEST_F(BatAdsConversionsTest, ConvertAdWhenTheConversionIsOnTheCuspOfExpiring) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -563,7 +563,7 @@ TEST_F(BatAdsConversionsTest, ConvertAdForRedirectChainIntermediateUrl) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -603,7 +603,7 @@ TEST_F(BatAdsConversionsTest, ConvertAdForRedirectChainOriginalUrl) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
@@ -643,14 +643,14 @@ TEST_F(BatAdsConversionsTest, ConvertAdForRedirectChainUrl) {
       [&conversion](const bool success, const AdEventList& ad_events) {
         ASSERT_TRUE(success);
 
-        EXPECT_EQ(1UL, ad_events.size());
+        ASSERT_EQ(1UL, ad_events.size());
         AdEventInfo ad_event = ad_events.front();
 
         EXPECT_EQ(conversion.creative_set_id, ad_event.creative_set_id);
       });
 }
 
-TEST_F(BatAdsConversionsTest, ExtractConversionId) {
+TEST_F(BatAdsConversionsTest, ExtractConversionIdFromHtmlMetaNameAttribute) {
   // Arrange
   resource::Conversions resource;
   resource.Load();
@@ -686,17 +686,191 @@ TEST_F(BatAdsConversionsTest, ExtractConversionId) {
         ASSERT_TRUE(success);
 
         ASSERT_EQ(1UL, conversion_queue_items.size());
-        ConversionQueueItemInfo item = conversion_queue_items.front();
-
-        ASSERT_EQ(conversion.creative_set_id, item.creative_set_id);
-        ASSERT_EQ(conversion.advertiser_public_key, item.advertiser_public_key);
+        const ConversionQueueItemInfo conversion_queue_item =
+            conversion_queue_items.front();
 
         const std::string expected_conversion_id = "abc123";
-        EXPECT_EQ(expected_conversion_id, item.conversion_id);
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
       });
 }
 
-TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromHtml) {
+TEST_F(BatAdsConversionsTest,
+       ExtractConversionIdFromHtmlMetaNameAttributeWithAnAdditionalAttribute) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/thankyou";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/thankyou"},
+      "<html><meta name=\"ad-conversion-id\" foo=\"bar\" content=\"abc123\"></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item =
+            conversion_queue_items.front();
+
+        const std::string expected_conversion_id = "abc123";
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdFromUnmatchedHtmlMetaNameAttribute) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/thankyou";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/thankyou"},
+      "<html><meta name=\"foo-ad-conversion-id\" content=\"abc123\"></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item =
+            conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdFromInvalidHtmlMetaNameAttribute) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/thankyou";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/thankyou"},
+      "<html><meta name=\"ad-conversion-id\" content=\"Invalid!\"></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item =
+            conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdFromEmptyHtmlMetaNameAttribute) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/thankyou";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/thankyou"},
+      "<html><meta name=\"ad-conversion-id\" content=\"\"></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item =
+            conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest, ExtractConversionIdForResourceIdPatternFromHtml) {
   // Arrange
   resource::Conversions resource;
   resource.Load();
@@ -720,8 +894,6 @@ TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromHtml) {
   FireAdEvent(ad_event);
 
   // Act
-  // See associated patterns in the verifiable conversion resource
-  // /data/test/resources/nnqccijfhvzwyrxpxwjrpmynaiazctqb
   conversions_->MaybeConvert(
       {"https://foo.bar/", "https://brave.com/foobar"},
       "<html><div id=\"conversion-id\">abc123</div></html>", resource.get());
@@ -733,17 +905,143 @@ TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromHtml) {
         ASSERT_TRUE(success);
 
         ASSERT_EQ(1UL, conversion_queue_items.size());
-        ConversionQueueItemInfo item = conversion_queue_items.front();
-
-        ASSERT_EQ(conversion.creative_set_id, item.creative_set_id);
-        ASSERT_EQ(conversion.advertiser_public_key, item.advertiser_public_key);
+        const ConversionQueueItemInfo conversion_queue_item = conversion_queue_items.front();
 
         const std::string expected_conversion_id = "abc123";
-        EXPECT_EQ(expected_conversion_id, item.conversion_id);
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
       });
 }
 
-TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromUrl) {
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForUnmatchedResourceIdPatternFromHtml) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/foobar"},
+      "<html><div id=\"foo-conversion-id\">abc123</div></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item = conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForInvalidResourceIdPatternFromHtml) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/foobar"},
+      "<html><div id=\"conversion-id\">Invalid!</div></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item = conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForEmptyResourceIdPatternFromHtml) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/", "https://brave.com/foobar"},
+      "<html><div id=\"conversion-id\"></div></html>",
+      resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        ASSERT_EQ(1UL, conversion_queue_items.size());
+        const ConversionQueueItemInfo conversion_queue_item = conversion_queue_items.front();
+
+        const std::string expected_conversion_id;
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest, ExtractConversionIdForResourceIdPatternFromUrl) {
   // Arrange
   resource::Conversions resource;
   resource.Load();
@@ -767,8 +1065,6 @@ TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromUrl) {
   FireAdEvent(ad_event);
 
   // Act
-  // See associated patterns in the verifiable conversion resource
-  // /data/test/resources/nnqccijfhvzwyrxpxwjrpmynaiazctqb
   conversions_->MaybeConvert(
       {"https://foo.bar/", "https://brave.com/foobar?conversion_id=abc123"},
       "<html><div id=\"conversion-id\">foobar</div></html>", resource.get());
@@ -780,13 +1076,127 @@ TEST_F(BatAdsConversionsTest, ExtractConversionIdWithResourcePatternFromUrl) {
         ASSERT_TRUE(success);
 
         ASSERT_EQ(1UL, conversion_queue_items.size());
-        ConversionQueueItemInfo item = conversion_queue_items.front();
-
-        ASSERT_EQ(conversion.creative_set_id, item.creative_set_id);
-        ASSERT_EQ(conversion.advertiser_public_key, item.advertiser_public_key);
+        const ConversionQueueItemInfo conversion_queue_item = conversion_queue_items.front();
 
         const std::string expected_conversion_id = "abc123";
-        EXPECT_EQ(expected_conversion_id, item.conversion_id);
+        EXPECT_EQ(expected_conversion_id, conversion_queue_item.conversion_id);
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForUnmatchedResourceIdPatternFromUrl) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar?conversion_id=*";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/",
+      "https://brave.com/foobar?foo_conversion_id=abc123"},
+      "<html><div id=\"conversion-id\">foobar</div></html>", resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        EXPECT_TRUE(conversion_queue_items.empty());
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForInvalidResourceIdPatternFromUrl) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar?conversion_id=*";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/",
+      "https://brave.com/foobar?conversion_id=Invalid!"},
+      "<html><div id=\"conversion-id\">foobar</div></html>", resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        EXPECT_TRUE(conversion_queue_items.empty());
+      });
+}
+
+TEST_F(BatAdsConversionsTest,
+       DoNotExtractConversionIdForEmptyResourceIdPatternFromUrl) {
+  // Arrange
+  resource::Conversions resource;
+  resource.Load();
+
+  ConversionList conversions;
+
+  ConversionInfo conversion;
+  conversion.advertiser_public_key =
+      "ofIveUY/bM7qlL9eIkAv/xbjDItFs1xRTTYKRZZsPHI=";
+  conversion.creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+  conversion.type = "postview";
+  conversion.url_pattern = "https://brave.com/foobar?conversion_id=*";
+  conversion.observation_window = 3;
+  conversion.expiry_timestamp =
+      CalculateExpiryTimestamp(conversion.observation_window);
+  conversions.push_back(conversion);
+
+  SaveConversions(conversions);
+
+  FireAdEvent(conversion.creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  conversions_->MaybeConvert(
+      {"https://foo.bar/",
+      "https://brave.com/foobar?conversion_id="},
+      "<html><div id=\"conversion-id\">foobar</div></html>", resource.get());
+
+  // Assert
+  conversion_queue_database_table_->GetAll(
+      [=](const Result result,
+          const ConversionQueueItemList& conversion_queue_items) {
+        ASSERT_EQ(Result::SUCCESS, result);
+
+        EXPECT_TRUE(conversion_queue_items.empty());
       });
 }
 

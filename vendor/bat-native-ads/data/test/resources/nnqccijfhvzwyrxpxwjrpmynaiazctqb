@@ -4,11 +4,11 @@
   "timestamp": "2021-04-26 09:00:00",
   "conversion_id_patterns": {
     "https://brave.com/foobar": {
-      "id_pattern": "<div.*id=\"conversion-id\".*>(.*)<\/div>",
+      "id_pattern": "<div.*id=\"conversion-id\".*>([-a-zA-Z0-9]*)<\/div>",
       "search_in": "html"
     },
     "https://brave.com/foobar?conversion_id=*": {
-      "id_pattern": "conversion_id\\=(.*)",
+      "id_pattern": "conversion_id\\=([-a-zA-Z0-9]*)",
       "search_in": "url"
     }
   }

@@ -25,11 +25,11 @@
 #include "bat/ads/internal/database/tables/conversions_database_table.h"
 #include "bat/ads/internal/features/conversions/conversions_features.h"
 #include "bat/ads/internal/logging.h"
+#include "bat/ads/internal/string_util.h"
 #include "bat/ads/internal/time_formatting_util.h"
 #include "bat/ads/internal/url_util.h"
 #include "bat/ads/pref_names.h"
 #include "brave_base/random.h"
-#include "third_party/re2/src/re2/re2.h"
 
 namespace ads {
 
@@ -86,19 +86,19 @@ bool DoesConfirmationTypeMatchConversionType(
   }
 }
 
-std::string ExtractConversionIdFromText(
+std::string ExtractConversionIdFromHtmlOrRedirectChain(
     const std::string& html,
     const std::vector<std::string>& redirect_chain,
     const std::string& conversion_url_pattern,
     const ConversionIdPatternMap& conversion_id_patterns) {
-  std::string conversion_id;
-  std::string conversion_id_pattern =
-      features::GetGetDefaultConversionIdPattern();
   std::string text = html;
+
+  std::string id_pattern = features::GetDefaultConversionIdPattern();
 
   const auto iter = conversion_id_patterns.find(conversion_url_pattern);
   if (iter != conversion_id_patterns.end()) {
     const ConversionIdPatternInfo conversion_id_pattern_info = iter->second;
+
     if (conversion_id_pattern_info.search_in == kSearchInUrl) {
       const auto url_iter = std::find_if(
           redirect_chain.cbegin(), redirect_chain.cend(),
@@ -107,20 +107,16 @@ std::string ExtractConversionIdFromText(
           });
 
       if (url_iter == redirect_chain.end()) {
-        return conversion_id;
+        return "";
       }
 
       text = *url_iter;
     }
 
-    conversion_id_pattern = conversion_id_pattern_info.id_pattern;
+    id_pattern = conversion_id_pattern_info.id_pattern;
   }
 
-  re2::StringPiece text_string_piece(text);
-  RE2 r(conversion_id_pattern);
-  RE2::FindAndConsume(&text_string_piece, r, &conversion_id);
-
-  return conversion_id;
+  return ExtractTextWithPattern(text, id_pattern);
 }
 
 std::set<std::string> GetConvertedCreativeSets(const AdEventList& ad_events) {
@@ -287,7 +283,7 @@ void Conversions::CheckRedirectChain(
           creative_set_ids.insert(ad_event.creative_set_id);
 
           VerifiableConversionInfo verifiable_conversion;
-          verifiable_conversion.id = ExtractConversionIdFromText(
+          verifiable_conversion.id = ExtractConversionIdFromHtmlOrRedirectChain(
               html, redirect_chain, conversion.url_pattern,
               conversion_id_patterns);
           verifiable_conversion.public_key = conversion.advertiser_public_key;

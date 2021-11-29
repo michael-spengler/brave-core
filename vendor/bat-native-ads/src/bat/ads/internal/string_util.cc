@@ -5,6 +5,8 @@
 
 #include "bat/ads/internal/string_util.h"
 
+#include <iostream>
+
 #include "base/check.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
@@ -15,28 +17,29 @@ namespace ads {
 
 namespace {
 
-std::string Strip(const std::string& value, const std::string& pattern) {
+std::string StripTextWithPattern(const std::string& text,
+                                const std::string& pattern) {
   DCHECK(!pattern.empty());
 
-  if (value.empty()) {
+  if (text.empty()) {
     return "";
   }
 
-  std::string stripped_value = value;
+  std::string stripped_text = text;
 
-  RE2::GlobalReplace(&stripped_value, pattern, " ");
+  RE2::GlobalReplace(&stripped_text, pattern, " ");
 
-  std::u16string stripped_value_string16 = base::UTF8ToUTF16(stripped_value);
+  std::u16string stripped_text_as_string16 = base::UTF8ToUTF16(stripped_text);
 
-  stripped_value_string16 =
-      base::CollapseWhitespace(stripped_value_string16, true);
+  stripped_text_as_string16 =
+      base::CollapseWhitespace(stripped_text_as_string16, true);
 
-  return base::UTF16ToUTF8(stripped_value_string16);
+  return base::UTF16ToUTF8(stripped_text_as_string16);
 }
 
 }  // namespace
 
-std::string StripNonAlphaCharacters(const std::string& value) {
+std::string StripNonAlphaCharacters(const std::string& text) {
   const std::string escaped_characters =
       RE2::QuoteMeta("!\"#$%&'()*+,-./:<=>?@\\[]^_`{|}~");
 
@@ -46,10 +49,10 @@ std::string StripNonAlphaCharacters(const std::string& value) {
       "[%s]|\\S*\\d+\\S*",
       escaped_characters.c_str());
 
-  return Strip(value, pattern);
+  return StripTextWithPattern(text, pattern);
 }
 
-std::string StripNonAlphaNumericCharacters(const std::string& value) {
+std::string StripNonAlphaNumericCharacters(const std::string& text) {
   const std::string escaped_characters =
       RE2::QuoteMeta("!\"#$%&'()*+,-./:<=>?@\\[]^_`{|}~");
 
@@ -59,7 +62,22 @@ std::string StripNonAlphaNumericCharacters(const std::string& value) {
       "[%s]",
       escaped_characters.c_str());
 
-  return Strip(value, pattern);
+  return StripTextWithPattern(text, pattern);
+}
+
+std::string ExtractTextWithPattern(const std::string& text,
+                                   const std::string& pattern) {
+  re2::StringPiece text_as_string_piece(text);
+
+  RE2 re(pattern);
+  std::string extracted_text;
+  RE2::FindAndConsume(&text_as_string_piece, re, &extracted_text);
+
+  std::cout << "FOOBAR.1: " << text << std::endl;
+  std::cout << "FOOBAR.2: " << pattern << std::endl;
+  std::cout << "FOOBAR.3: " << extracted_text << std::endl;
+
+  return extracted_text;
 }
 
 }  // namespace ads

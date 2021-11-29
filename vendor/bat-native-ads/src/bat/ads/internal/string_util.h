@@ -10,9 +10,12 @@
 
 namespace ads {
 
-std::string StripNonAlphaCharacters(const std::string& value);
+std::string StripNonAlphaCharacters(const std::string& text);
 
-std::string StripNonAlphaNumericCharacters(const std::string& value);
+std::string StripNonAlphaNumericCharacters(const std::string& text);
+
+std::string ExtractTextWithPattern(const std::string& text,
+                                   const std::string& pattern);
 
 }  // namespace ads
 

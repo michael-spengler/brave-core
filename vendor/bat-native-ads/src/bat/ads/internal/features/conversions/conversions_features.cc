@@ -14,14 +14,15 @@ namespace {
 
 const char kFeatureName[] = "Conversions";
 
-const char kFieldTrialParameterResourceVersion[] =
+const char kFieldTrialParameterConversionsResourceVersion[] =
     "conversions_resource_version";
-const int kDefaultResourceVersion = 1;
+const int kDefaultConversionsResourceVersion = 1;
 
 const char kFieldTrialParameterDefaultConversionIdPattern[] =
     "conversions_default_conversion_id_pattern";
-const char kDefaultDefaultConversionIdPattern[] =
-    "<meta.*name=\"ad-conversion-id\".*content=\"([^\"]*)\".*>";
+const char kDefaultConversionIdPattern[] =
+    "<meta.*name=\"ad-conversion-id\".*content=\"([-a-zA-Z0-9]*)\".*>";
+
 }  // namespace
 
 const base::Feature kFeature{kFeatureName, base::FEATURE_ENABLED_BY_DEFAULT};
@@ -32,13 +33,14 @@ bool IsConversionsEnabled() {
 
 int GetConversionsResourceVersion() {
   return GetFieldTrialParamByFeatureAsInt(
-      kFeature, kFieldTrialParameterResourceVersion, kDefaultResourceVersion);
+      kFeature, kFieldTrialParameterConversionsResourceVersion,
+      kDefaultConversionsResourceVersion);
 }
 
-std::string GetGetDefaultConversionIdPattern() {
+std::string GetDefaultConversionIdPattern() {
   return GetFieldTrialParamByFeatureAsString(
       kFeature, kFieldTrialParameterDefaultConversionIdPattern,
-      kDefaultDefaultConversionIdPattern);
+      kDefaultConversionIdPattern);
 }
 
 }  // namespace features
