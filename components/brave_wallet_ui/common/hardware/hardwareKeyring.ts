@@ -4,22 +4,29 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { TransactionInfo } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
-import { HardwareVendor } from '../api/hardware_keyrings'
+import { HardwareCoins, HardwareVendor } from '../api/hardware_keyrings'
+import { CoinType } from '@glif/filecoin-address'
 import { GetAccountsHardwareOperationResult, HardwareOperationResult, SignHardwareMessageOperationResult, SignHardwareTransactionOperationResult } from '../hardware_operations'
 
 export abstract class HardwareKeyring {
-  abstract getAccounts (from: number, to: number, scheme: string): Promise<GetAccountsHardwareOperationResult>
+  abstract coin (): HardwareCoins
   abstract type (): HardwareVendor
   abstract isUnlocked (): boolean
   abstract unlock (): Promise<HardwareOperationResult>
 }
 
 export abstract class TrezorKeyring extends HardwareKeyring {
+  abstract getAccounts (from: number, to: number, scheme: string): Promise<GetAccountsHardwareOperationResult>
   abstract signTransaction (path: string, txInfo: TransactionInfo, chainId: string): Promise<SignHardwareTransactionOperationResult>
   abstract signPersonalMessage (path: string, message: string): Promise<SignHardwareMessageOperationResult>
 }
 
 export abstract class LedgerKeyring extends HardwareKeyring {
+  abstract getAccounts (from: number, to: number, scheme: string): Promise<GetAccountsHardwareOperationResult>
   abstract signPersonalMessage (path: string, address: string, message: string): Promise<SignHardwareMessageOperationResult>
   abstract signTransaction (path: string, rawTxHex: string): Promise<SignHardwareTransactionOperationResult>
+}
+
+export abstract class FilecoinKeyring extends HardwareKeyring {
+  abstract getAccounts (from: number, to: number, coinType?: CoinType): Promise<GetAccountsHardwareOperationResult>
 }
