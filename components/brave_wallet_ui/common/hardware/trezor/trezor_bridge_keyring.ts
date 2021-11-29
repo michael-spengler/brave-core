@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { publicToAddress, toChecksumAddress, bufferToHex } from 'ethereumjs-util'
-import { TransactionInfo, TREZOR_HARDWARE_VENDOR } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
+import { TransactionInfo, TREZOR_HARDWARE_VENDOR, BraveCoins } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
 import { getLocale } from '../../../../common/locale'
 import {
   TrezorCommand,
@@ -40,6 +40,10 @@ export default class TrezorBridgeKeyring extends TrezorKeyring {
 
   type = (): HardwareVendor => {
     return TREZOR_HARDWARE_VENDOR
+  }
+
+  coin = (): BraveCoins => {
+    return BraveCoins.ETH
   }
 
   isUnlocked = (): boolean => {
@@ -246,7 +250,8 @@ export default class TrezorBridgeKeyring extends TrezorKeyring {
         derivationPath: value.serializedPath,
         name: this.type(),
         hardwareVendor: this.type(),
-        deviceId: this.deviceId
+        deviceId: this.deviceId,
+        coin: this.coin()
       })
     }
     return { success: true, payload: [...accounts] }

@@ -222,6 +222,7 @@ struct HardwareWalletAccount {
   string name;
   string hardware_vendor;
   string device_id;
+  BraveCoins coin;
 };
 
 struct HardwareInfo {
@@ -513,6 +514,11 @@ const string kGoerliChainId = "0x5";
 const string kKovanChainId = "0x2a";
 const string kLocalhostChainId = "0x539";
 
+enum BraveCoins {
+  ETH = 1,
+  FILECOIN = 2
+};
+
 struct EthereumChain {
   string chain_id;
   string chain_name;
@@ -557,7 +563,7 @@ interface EthJsonRpcController {
   GetNetworkUrl() => (string network_url);
 
   // Obtains the native balance (e.g. ETH for Ethereum) for the address
-  GetBalance(string address) => (bool success, string balance);
+  GetBalance(string address, BraveCoins coin) => (bool success, string balance);
 
   // Obtains the contract's ERC20 compatible balance for an address
   GetERC20TokenBalance(string contract,

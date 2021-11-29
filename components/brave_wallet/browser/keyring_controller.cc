@@ -24,6 +24,7 @@
 #include "brave/components/brave_wallet/browser/hd_keyring.h"
 #include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wallet/common/eth_address.h"
+#include "brave/components/brave_wallet/common/hex_utils.h"
 #include "components/grit/brave_components_strings.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_service.h"
@@ -573,7 +574,8 @@ void KeyringController::GetKeyringInfo(const std::string& keyring_id,
 
 void KeyringController::GetDefaultKeyringInfo(
     GetDefaultKeyringInfoCallback callback) {
-  GetKeyringInfo(kDefaultKeyringId, std::move(callback));
+  // GetKeyringInfo(kDefaultKeyringId, std::move(callback));
+  GetKeyringInfo(kFilecoinKeyringId, std::move(callback));
 }
 
 void KeyringController::GetMnemonicForDefaultKeyring(
@@ -584,6 +586,7 @@ void KeyringController::GetMnemonicForDefaultKeyring(
 void KeyringController::CreateWallet(const std::string& password,
                                      CreateWalletCallback callback) {
   auto* keyring = CreateKeyring(kDefaultKeyringId, password);
+
   if (keyring) {
     AddAccountForDefaultKeyring(GetAccountName(1));
   }
@@ -1210,6 +1213,8 @@ bool KeyringController::IsHardwareAccount(const std::string& account) const {
 
 void KeyringController::Unlock(const std::string& password,
                                UnlockCallback callback) {
+
+  ResumeKeyring(kFilecoinKeyringId, password);
   if (!ResumeKeyring(kDefaultKeyringId, password)) {
     encryptor_.reset();
     std::move(callback).Run(false);
@@ -1351,7 +1356,7 @@ bool KeyringController::CreateKeyringInternal(const std::string& keyring_id,
     filecoin_keyring_ = std::make_unique<FilecoinKeyring>();
   }
   auto* keyring = GetHDKeyringById(keyring_id);
-  DCHECK(keyring);
+  DCHECK(keyring) << "No HDKeyring for " << keyring_id;
   if (keyring)
     keyring->ConstructRootHDKey(*seed, kRootPath);
 

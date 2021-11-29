@@ -2,7 +2,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
-
+import { BraveCoins } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
 import {
   HardwareWalletConnectOpts
 } from '../../components/desktop/popup-modals/add-account-modal/hardware-wallet-connect/types'
@@ -19,11 +19,11 @@ import * as WalletActions from '../actions/wallet_actions'
 import { GetNetworkInfo } from '../../utils/network-utils'
 import getAPIProxy from './bridge'
 import { Dispatch, State } from './types'
-import LedgerBridgeKeyring from '../../common/hardware/ledgerjs/eth_ledger_bridge_keyring'
 import TrezorBridgeKeyring from '../../common/hardware/trezor/trezor_bridge_keyring'
 import { getHardwareKeyring } from '../api/hardware_keyrings'
 import { HardwareWalletAccount } from '../hardware/types'
 import { GetAccountsHardwareOperationResult } from '../hardware_operations'
+import { LedgerKeyring } from '../hardware/hardwareKeyring'
 
 export const getERC20Allowance = (
   contractAddress: string,
@@ -49,7 +49,7 @@ export const getERC20Allowance = (
 export const onConnectHardwareWallet = (opts: HardwareWalletConnectOpts): Promise<HardwareWalletAccount[]> => {
   return new Promise(async (resolve, reject) => {
     const keyring = getHardwareKeyring(opts.hardware)
-    if (keyring instanceof LedgerBridgeKeyring || keyring instanceof TrezorBridgeKeyring) {
+    if (keyring instanceof LedgerKeyring || keyring instanceof TrezorBridgeKeyring) {
       keyring.getAccounts(opts.startIndex, opts.stopIndex, opts.scheme)
         .then((result: GetAccountsHardwareOperationResult) => {
           if (result.payload) {
@@ -65,7 +65,8 @@ export const onConnectHardwareWallet = (opts: HardwareWalletConnectOpts): Promis
 export const getBalance = (address: string): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     const controller = getAPIProxy().ethJsonRpcController
-    const result = await controller.getBalance(address)
+
+    const result = await controller.getBalance(address, BraveCoins.ETH)
     if (result.success) {
       resolve(formatBalance(result.balance, 18))
     } else {
@@ -129,7 +130,7 @@ export function refreshBalances (currentNetwork: EthereumChain) {
     await dispatch(WalletActions.setVisibleTokensInfo(visibleTokens))
 
     const getBalanceReturnInfos = await Promise.all(accounts.map(async (account) => {
-      const balanceInfo = await ethJsonRpcController.getBalance(account.address)
+      const balanceInfo = await ethJsonRpcController.getBalance(account.address, BraveCoins.FILECOIN)
       return balanceInfo
     }))
     const balancesAndPrice = {

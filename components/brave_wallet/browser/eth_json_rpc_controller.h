@@ -67,6 +67,7 @@ class EthJsonRpcController : public KeyedService,
                RequestCallback callback) override;
 
   void GetBalance(const std::string& address,
+                  mojom::BraveCoins coin,
                   GetBalanceCallback callback) override;
 
   using GetTxCountCallback =

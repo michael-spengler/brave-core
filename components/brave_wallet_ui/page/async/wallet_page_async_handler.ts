@@ -2,7 +2,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
-import * as bls from 'noble-bls12-381'
 import { FilecoinAddressProtocol } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
 import getWalletPageApiProxy from '../wallet_page_api_proxy'
 import AsyncActionHandler from '../../../common/AsyncActionHandler'
@@ -32,20 +31,8 @@ import {
 import { NewUnapprovedTxAdded } from '../../common/constants/action_types'
 import { fetchSwapQuoteFactory } from '../../common/async/handlers'
 import { Store } from '../../common/async/types'
-import { HardwareWalletAccount } from 'components/brave_wallet_ui/common/hardware/types'
-
-function switchEndianness (hexString: string) {
-  const regex = hexString.match(/.{2}/g)
-  if (!regex) {
-    throw new Error(`Could not switch endianness of hex string: ${hexString}`)
-  }
-  return regex.reverse().join('')
-}
-
-function extractPublicKeyForBLS (privateKey: string): string {
-  // https://github.com/brave/brave-browser/issues/20024
-  return Buffer.from(bls.getPublicKey(switchEndianness(privateKey))).toString('hex')
-}
+import { HardwareWalletAccount } from '../../common/hardware/types'
+import { extractPublicKeyForBLS } from '../../common/hardware/ledgerjs/filecoin_ledger_keyring'
 
 const handler = new AsyncActionHandler()
 

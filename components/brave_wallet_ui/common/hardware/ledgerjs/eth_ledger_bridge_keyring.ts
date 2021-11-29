@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { LEDGER_HARDWARE_VENDOR } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
+import { LEDGER_HARDWARE_VENDOR, BraveCoins } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
 import { assert } from 'chrome://resources/js/assert.m.js'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import Eth from '@ledgerhq/hw-app-eth'
@@ -30,6 +30,10 @@ export default class LedgerBridgeKeyring extends LedgerKeyring {
   private app?: Eth
   private deviceId: string
 
+  coin = (): BraveCoins => {
+    return BraveCoins.ETH
+  }
+
   type = (): HardwareVendor => {
     return LEDGER_HARDWARE_VENDOR
   }
@@ -50,7 +54,8 @@ export default class LedgerBridgeKeyring extends LedgerKeyring {
         derivationPath: path,
         name: this.type(),
         hardwareVendor: this.type(),
-        deviceId: this.deviceId
+        deviceId: this.deviceId,
+        coin: this.coin()
       })
     }
     return { success: true, payload: [...accounts] }
@@ -103,7 +108,7 @@ export default class LedgerBridgeKeyring extends LedgerKeyring {
       if (!unlocked.success || !this.app) {
         return unlocked
       }
-      const eth: Eth = this.app
+        const eth: Eth = this.app
       const messageHex = Buffer.from(message).toString('hex')
       const data = await eth.signPersonalMessage(path, messageHex)
       const signature = this.createMessageSignature(data)

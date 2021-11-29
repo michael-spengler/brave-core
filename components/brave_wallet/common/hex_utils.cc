@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/common/hex_utils.h"
 
+#include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
@@ -128,6 +129,76 @@ std::string Uint256ValueToHex(uint256_t input) {
     return "0x0";
   }
   return "0x" + result;
+}
+
+bool StringToUint256(const std::string& source, uint256_t* out) {
+  DLOG(INFO) << "input:" << source;
+  for (const auto c : source) {
+    (*out) *= 10;
+    char digit = static_cast<char>(c - '0');
+    (*out) += static_cast<uint256_t>(digit);
+  }
+  return true;
+}
+
+unsigned int bits(uint256_t value) {
+  int WIDTH = 256 / 8;
+  uint8_t* pn = (uint8_t*)&value;
+  for (int pos = WIDTH - 1; pos >= 0; pos--) {
+    if (pn[pos]) {
+      for (int nbits = 31; nbits > 0; nbits--) {
+        if (pn[pos] & 1U << nbits)
+          return 32 * pos + nbits + 1;
+      }
+      return 32 * pos + 1;
+    }
+  }
+  return 0;
+}
+
+// a/b = result
+uint256_t divide(uint256_t a, uint256_t b, uint256_t* remainder) {
+  uint256_t div = b;  // make a copy, so we can shift.
+  uint256_t num = a;  // make a copy, so we can subtract.
+  int num_bits = bits(a);
+  int div_bits = bits(b);
+  DLOG(INFO) << "div_bits:" << div_bits << " num_bits:" << num_bits;
+  if (div_bits == 0)
+    return 0;               // division by zero
+  if (div_bits > num_bits)  // the result is certainly 0.
+    return 0;
+  *remainder = 0;
+  int shift = num_bits - div_bits;
+  DLOG(INFO) << "div_bits:" << div_bits << " num_bits:" << num_bits
+             << " shift:" << shift;
+  uint256_t result = 0;
+  uint32_t* pn = (uint32_t*)&result;
+
+  div <<= shift;  // shift so that div and num align.
+  while (shift >= 0) {
+    if (num >= div) {
+      num -= div;
+      pn[shift / 32] |= (1 << (shift & 31));  // set a bit of the result.
+    }
+    div >>= 1;  // shift back.
+    shift--;
+  }
+  // num now contains the remainder of the division.
+  *remainder = num;
+  return result;
+}
+
+std::string Uint256ToString(uint256_t a) {
+  uint256_t x = a;
+  std::string s;
+  while (x > 0) {
+      uint256_t remainder = 0;
+      x = brave_wallet::divide(x, 10, &remainder);
+      s.push_back(remainder + '0');
+      DLOG(INFO) << "s:" << s;
+  }
+  reverse(s.begin(), s.end());
+  return s;
 }
 
 }  // namespace brave_wallet

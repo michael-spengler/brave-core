@@ -730,7 +730,7 @@ TEST_F(EthJsonRpcControllerUnitTest, GetBalance) {
   SetInterceptor("eth_getBalance", "",
                  "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0xb539d5\"}");
   rpc_controller_->GetBalance(
-      "0x4e02f254184E904300e0775E4b8eeCB1",
+      "0x4e02f254184E904300e0775E4b8eeCB1", mojom::BraveCoins::ETH,
       base::BindOnce(&OnStringResponse, &callback_called, true, "0xb539d5"));
   base::RunLoop().RunUntilIdle();
   EXPECT_TRUE(callback_called);
@@ -738,7 +738,7 @@ TEST_F(EthJsonRpcControllerUnitTest, GetBalance) {
   callback_called = false;
   SetErrorInterceptor();
   rpc_controller_->GetBalance(
-      "0x4e02f254184E904300e0775E4b8eeCB1",
+      "0x4e02f254184E904300e0775E4b8eeCB1", mojom::BraveCoins::ETH,
       base::BindOnce(&OnStringResponse, &callback_called, false, ""));
   base::RunLoop().RunUntilIdle();
   EXPECT_TRUE(callback_called);
