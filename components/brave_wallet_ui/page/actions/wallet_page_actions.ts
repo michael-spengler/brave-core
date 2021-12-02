@@ -19,7 +19,8 @@ import {
   ViewPrivateKeyPayloadType,
   ImportAccountFromJsonPayloadType,
   ImportFromExternalWalletPayloadType,
-  ImportWalletErrorPayloadType
+  ImportWalletErrorPayloadType,
+  ImportFilecoinAccountPayloadType
 } from '../constants/action_types'
 import { SwapResponse, SwapErrorResponse, ERCToken, UpdateAccountNamePayloadType } from '../../constants/types'
 import { SwapParamsPayloadType } from '../../common/constants/action_types'
@@ -29,6 +30,7 @@ export const createWallet = createAction<CreateWalletPayloadType>('createWallet'
 export const restoreWallet = createAction<RestoreWalletPayloadType>('restoreWallet')
 export const addAccount = createAction<AddAccountPayloadType>('addAccount')
 export const importAccount = createAction<ImportAccountPayloadType>('importAccount')
+export const importFilecoinAccount = createAction<ImportFilecoinAccountPayloadType>('importFilecoinAccount')
 export const importAccountFromJson = createAction<ImportAccountFromJsonPayloadType>('importAccountFromJson')
 export const removeImportedAccount = createAction<RemoveImportedAccountPayloadType>('removeImportedAccount')
 export const walletCreated = createAction<WalletCreatedPayloadType>('walletCreated')

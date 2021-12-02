@@ -7,7 +7,7 @@ import * as React from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators, Dispatch } from 'redux'
 import { Switch, Route, useHistory, useLocation } from 'react-router-dom'
-import { TransactionInfo } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
+import { TransactionInfo, FilecoinAddressProtocol } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
 import * as WalletPageActions from './actions/wallet_page_actions'
 import * as WalletActions from '../common/actions/wallet_actions'
 import store from './store'
@@ -393,6 +393,10 @@ function Container (props: Props) {
     props.walletPageActions.importAccount({ accountName, privateKey })
   }
 
+  const onImportFilecoinAccount = (accountName: string, privateKey: string, network: string, protocol: FilecoinAddressProtocol) => {
+    props.walletPageActions.importFilecoinAccount({ accountName, privateKey, network, protocol })
+  }
+
   const onImportAccountFromJson = (accountName: string, password: string, json: string) => {
     props.walletPageActions.importAccountFromJson({ accountName, password, json })
   }
@@ -624,6 +628,7 @@ function Container (props: Props) {
                 onConnectHardwareWallet={onConnectHardwareWallet}
                 onCreateAccount={onCreateAccount}
                 onImportAccount={onImportAccount}
+                onImportFilecoinAccount ={onImportFilecoinAccount}
                 isLoading={isFetchingPriceHistory}
                 showAddModal={showAddModal}
                 onHideAddModal={onHideAddModal}
