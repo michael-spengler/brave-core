@@ -252,7 +252,7 @@ bool ShouldDisplayFeedItem(const mojom::FeedItemPtr& feed_item,
 
 }  // namespace
 
-bool BuildFeed(std::vector<mojom::FeedItemPtr>& feed_items,
+bool BuildFeed(const std::vector<mojom::FeedItemPtr>& feed_items,
                const std::unordered_set<std::string>& history_hosts,
                Publishers* publishers,
                mojom::Feed* feed) {

@@ -8,6 +8,7 @@
 #include <codecvt>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "base/json/json_reader.h"
 #include "base/logging.h"

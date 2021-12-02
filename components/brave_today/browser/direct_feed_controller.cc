@@ -5,8 +5,11 @@
 
 #include "brave/components/brave_today/browser/direct_feed_controller.h"
 
+#include <algorithm>
 #include <codecvt>
 #include <iterator>
+#include <string>
+#include <utility>
 
 #include "base/barrier_callback.h"
 #include "base/callback.h"
@@ -27,13 +30,14 @@ namespace brave_news {
 
 namespace {
 
-mojom::ArticlePtr RustFeedItemToArticle(FeedItem& rust_feed_item) {
+mojom::ArticlePtr RustFeedItemToArticle(const FeedItem& rust_feed_item) {
   auto metadata = mojom::FeedItemMetadata::New();
   metadata->title = static_cast<std::string>(rust_feed_item.title);
-  metadata->image =
-      mojom::Image::NewImageUrl(GURL(rust_feed_item.image_url.c_str()));
-  metadata->url = GURL(rust_feed_item.destionation_url.c_str());
-  metadata->description = rust_feed_item.description.c_str();
+  metadata->image = mojom::Image::NewImageUrl(
+      GURL(static_cast<std::string>(rust_feed_item.image_url)));
+  metadata->url =
+      GURL(static_cast<std::string>(rust_feed_item.destionation_url));
+  metadata->description = static_cast<std::string>(rust_feed_item.description);
   metadata->publish_time =
       base::Time::FromJsTime(rust_feed_item.published_timestamp * 1000);
   // Get language-specific relative time

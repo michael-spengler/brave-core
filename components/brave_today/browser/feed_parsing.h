@@ -6,6 +6,9 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_TODAY_BROWSER_FEED_PARSING_H_
 #define BRAVE_COMPONENTS_BRAVE_TODAY_BROWSER_FEED_PARSING_H_
 
+#include <string>
+#include <vector>
+
 #include "base/values.h"
 #include "brave/components/brave_today/common/brave_news.mojom.h"
 

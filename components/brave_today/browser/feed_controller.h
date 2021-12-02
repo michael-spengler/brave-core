@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "base/one_shot_event.h"
 #include "base/scoped_observation.h"

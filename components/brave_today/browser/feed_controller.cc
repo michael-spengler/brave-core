@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "base/barrier_callback.h"
 #include "base/bind.h"
