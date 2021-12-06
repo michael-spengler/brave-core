@@ -4,17 +4,18 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
+import { useDispatch } from 'react-redux'
 import { CaratRightIcon } from 'brave-ui/components/icons'
-import { Button } from 'brave-ui'
 import { getLocale } from '../../../../../common/locale'
+import * as todayActions from '../../../../actions/today_actions'
 import getBraveNewsAPI, { Publisher } from '../../../../api/brave_news'
 import {
   SettingsRow,
   SettingsText,
   SettingsSectionTitle
 } from '../../../../components/default'
-import { Toggle } from '../../../../components/toggle'
 import NavigateBack from '../../../../components/default/settings/navigateBack'
+import DirectFeedItemMenu from './directFeedMenu'
 import { Props } from './'
 import PublisherPrefs from './publisherPrefs'
 import * as Styled from './style'
@@ -122,9 +123,10 @@ export default function Sources (props: SourcesProps) {
     props.setCategory('')
   }, [props.setCategory])
   // Function to turn direct feed off
-  const onChangeDirectFeed = React.useCallback(function (publisherId: string) {
-    props.setPublisherPref(publisherId, false)
-  }, [props.setPublisherPref])
+  const dispatch = useDispatch()
+  const onRemoveDirectFeed = function (directFeed: Publisher) {
+    dispatch(todayActions.removeDirectFeed({ directFeed }))
+  }
   const [feedInputText, setFeedInputText] = React.useState<string>()
   const [feedInputIsValid, setFeedInputIsValid] = React.useState<boolean>()
   const onChangeFeedInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,26 +156,26 @@ export default function Sources (props: SourcesProps) {
   if (!props.category) {
     return (
       <>
-        <SettingsSectionTitle>
-          {/* getLocale('braveTodayYourSourcesTitle') */}
-          Your Sources
-        </SettingsSectionTitle>
-        {userFeeds && userFeeds.map(publisher => (
-          <SettingsRow key={publisher.publisherId} onClick={onChangeDirectFeed.bind(undefined, publisher.publisherId)} isInteractive={true}>
-            <SettingsText>{publisher.publisherName}</SettingsText>
-            <Toggle
-              checked={true}
-              onChange={onChangeDirectFeed.bind(undefined, publisher.publisherId)}
-              size='large'
-            />
-          </SettingsRow>
-        ))}
-        <Styled.FeedInputLabel>
-          Feed Url
-          <Styled.FeedInput type={'text'} value={feedInputText} onChange={onChangeFeedInput} />
-        </Styled.FeedInputLabel>
-        <Button text={'Add source'} onClick={onAddSource} />
-        <hr />
+        <Styled.YourSources>
+          <SettingsSectionTitle>
+            {/* getLocale('braveTodayYourSourcesTitle') */}
+            Your Sources
+          </SettingsSectionTitle>
+          {userFeeds && userFeeds.map(publisher => (
+            <SettingsRow key={publisher.publisherId} isInteractive={false}>
+              <SettingsText>{publisher.publisherName}</SettingsText>
+              <DirectFeedItemMenu key={publisher.publisherId} onRemove={onRemoveDirectFeed.bind(undefined, publisher)} />
+            </SettingsRow>
+          ))}
+          <Styled.FeedInputLabel>
+            Feed Url
+            <Styled.FeedInput type={'text'} value={feedInputText} onChange={onChangeFeedInput} />
+          </Styled.FeedInputLabel>
+          {!feedInputIsValid &&
+            <Styled.FeedUrlError>Sorry, we couldn't find that feed address.</Styled.FeedUrlError>
+          }
+          <Styled.TemporaryFixedButton disabled={!feedInputIsValid} brand='rewards' level='primary' type='default' text={'Add source'} onClick={onAddSource} />
+        </Styled.YourSources>
         <CategoryList
           categories={[...publishersByCategory.keys()]}
           setCategory={props.setCategory}

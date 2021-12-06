@@ -37,6 +37,20 @@ export default function getTodayState (): BraveTodayState {
     cardsViewed: 0,
     cardsVisited: 0,
     publishers: hasDataError ? undefined : {
+      'direct:https://example.com/feed': {
+        publisherId: 'direct:https://example.com/feed1',
+        publisherName: 'My Custom Feed 1',
+        categoryName: 'User feeds',
+        isEnabled: true,
+        userEnabledStatus: BraveNews.UserEnabled.ENABLED
+      },
+      'direct:https://example2.com/feed': {
+        publisherId: 'direct:https://example.com/feed2',
+        publisherName: 'My Custom Feed 2',
+        categoryName: 'User feeds',
+        isEnabled: true,
+        userEnabledStatus: BraveNews.UserEnabled.ENABLED
+      },
       '5eece347713f329f156cd0204cf9b12629f1dc8f4ea3c1b67984cfbfd66cdca5': {
         publisherId: '5eece347713f329f156cd0204cf9b12629f1dc8f4ea3c1b67984cfbfd66cdca5',
         publisherName: 'Test Publisher 1',

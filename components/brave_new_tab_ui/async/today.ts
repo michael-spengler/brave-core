@@ -101,18 +101,16 @@ handler.on<number>(Actions.feedItemViewedCountChanged.getType(), async (store, p
   getBraveNewsController().onSessionCardViewsCountChanged(state.today.cardsViewed)
 })
 
+handler.on<Actions.RemoveDirectFeedPayload>(Actions.removeDirectFeed.getType(), async (store, payload) => {
+  const feedUrl = payload.directFeed.publisherId.replace('direct:', '')
+  getBraveNewsController().removeDirectFeed({ url: feedUrl })
+  window.setTimeout(() => {
+    store.dispatch(Actions.checkForUpdate())
+  }, 3000)
+})
+
 handler.on<Actions.SetPublisherPrefPayload>(Actions.setPublisherPref.getType(), async (store, payload) => {
   const { publisherId, enabled } = payload
-  // TODO(petemill): temporary, should use specific action
-  if (publisherId.startsWith('direct:')) {
-    getBraveNewsController().removeDirectFeed({ url: publisherId.replace('direct:', '') })
-    const { publishers } = await getBraveNewsController().getPublishers()
-    store.dispatch(Actions.dataReceived({ publishers }))
-    window.setTimeout(() => {
-      store.dispatch(Actions.checkForUpdate())
-    }, 3000)
-    return
-  }
   let userStatus = (enabled === null)
     ? BraveNews.UserEnabled.NOT_MODIFIED
     : enabled

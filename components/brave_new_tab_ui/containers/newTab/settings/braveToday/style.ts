@@ -4,6 +4,7 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import styled from 'styled-components'
+import { Button } from 'brave-ui'
 
 export const Section = styled('div')`
   height: 100%;
@@ -78,4 +79,26 @@ export const FeedInput = styled('input')`
   &::placeholder {
     color: #84889C;
   }
+`
+
+export const YourSources = styled('div')`
+  margin-bottom: 16px;
+  border-bottom: solid 1px #E6E8F5;
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+`
+
+export const TemporaryFixedButton = styled(Button)`
+  color: white;
+  align-self: flex-end;
+  margin-top: 6px;
+`
+
+export const FeedUrlError = styled('p')`
+  font: 400 12px/18px Poppins;
+  padding: 0;
+  margin: 2px 0 0 0;
+  color: #bd1531;
 `
