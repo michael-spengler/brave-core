@@ -32,18 +32,18 @@ SdkControllerFactory* SdkControllerFactory::GetInstance() {
 }
 
 // static
-// mojo::PendingRemote<mojom::SdkController> SdkControllerFactory::GetForContext(
-//     content::BrowserContext* context) {
-//   if (!IsAllowedForContext(context)) {
-//     return mojo::PendingRemote<mojom::SdkController>();
-//   }
-//   return static_cast<skus::SdkController*>(
-//              GetInstance()->GetServiceForBrowserContext(context, true))
-//       ->MakeRemote();
-// }
+mojo::PendingRemote<mojom::SdkController> SdkControllerFactory::GetForContext(
+    content::BrowserContext* context) {
+  if (!IsAllowedForContext(context)) {
+    return mojo::PendingRemote<mojom::SdkController>();
+  }
+  return static_cast<skus::SdkController*>(
+             GetInstance()->GetServiceForBrowserContext(context, true))
+      ->MakeRemote();
+}
 
 // static
-skus::SdkController* SdkControllerFactory::GetForContext(
+skus::SdkController* SdkControllerFactory::GetControllerForContext(
     content::BrowserContext* context) {
   if (!IsAllowedForContext(context)) {
     return nullptr;

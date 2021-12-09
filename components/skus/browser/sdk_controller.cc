@@ -93,6 +93,16 @@ SdkController::SdkController(
 
 SdkController::~SdkController() {}
 
+mojo::PendingRemote<mojom::SdkController> SdkController::MakeRemote() {
+  mojo::PendingRemote<mojom::SdkController> remote;
+  receivers_.Add(this, remote.InitWithNewPipeAndPassReceiver());
+  return remote;
+}
+
+void SdkController::Bind(mojo::PendingReceiver<mojom::SdkController> receiver) {
+  receivers_.Add(this, std::move(receiver));
+}
+
 void SdkController::RefreshOrder(
     const std::string& order_id,
     mojom::SdkController::RefreshOrderCallback callback) {

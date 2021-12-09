@@ -67,7 +67,7 @@ KeyedService* BraveVpnServiceFactory::BuildServiceInstanceFor(
 #if defined(OS_WIN) || defined(OS_MAC)
   return new BraveVpnServiceDesktop(
       shared_url_loader_factory, user_prefs::UserPrefs::Get(context),
-      skus::SdkControllerFactory::GetForContext(context));
+      skus::SdkControllerFactory::GetControllerForContext(context));
 #endif
 
 #if defined(OS_ANDROID)

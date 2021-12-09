@@ -325,7 +325,7 @@ void MaybeBindSkusSdkImpl(
     content::RenderFrameHost* const frame_host,
     mojo::PendingReceiver<skus::mojom::SdkController> receiver) {
   auto* context = frame_host->GetBrowserContext();
-  auto* service = skus::SdkControllerFactory::GetForContext(context);
+  auto* service = skus::SdkControllerFactory::GetControllerForContext(context);
   if (service) {
     mojo::MakeSelfOwnedReceiver(
         std::make_unique<skus::SdkProviderImpl>(service), std::move(receiver));

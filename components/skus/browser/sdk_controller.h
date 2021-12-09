@@ -14,6 +14,9 @@
 #include "brave/components/skus/common/skus_sdk.mojom.h"
 #include "brave/third_party/rust/cxx/include/cxx.h"
 #include "components/keyed_service/core/keyed_service.h"
+#include "mojo/public/cpp/bindings/pending_remote.h"
+#include "mojo/public/cpp/bindings/receiver_set.h"
+#include "mojo/public/cpp/bindings/remote_set.h"
 
 class PrefService;
 
@@ -64,6 +67,10 @@ class SdkController : public KeyedService, public mojom::SdkController {
   SdkController(const SdkController&) = delete;
   SdkController& operator=(SdkController&) = delete;
 
+  mojo::PendingRemote<mojom::SdkController> MakeRemote();
+  void Bind(mojo::PendingReceiver<mojom::SdkController> receiver);
+
+  // mojom::SdkController
   void RefreshOrder(
       const std::string& order_id,
       skus::mojom::SdkController::RefreshOrderCallback callback) override;
@@ -84,6 +91,7 @@ class SdkController : public KeyedService, public mojom::SdkController {
   std::unique_ptr<skus::SkusSdkContextImpl> context_;
   ::rust::Box<skus::CppSDK> sdk_;
   PrefService* prefs_;
+  mojo::ReceiverSet<mojom::SdkController> receivers_;
   base::WeakPtrFactory<SdkController> weak_factory_;
 };
 

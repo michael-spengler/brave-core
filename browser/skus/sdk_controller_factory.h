@@ -9,6 +9,7 @@
 #include "base/memory/singleton.h"
 #include "brave/components/skus/browser/sdk_controller.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
+#include "mojo/public/cpp/bindings/pending_remote.h"
 
 namespace skus {
 
@@ -16,9 +17,9 @@ namespace skus {
 // created/shutdown.
 class SdkControllerFactory : public BrowserContextKeyedServiceFactory {
  public:
-  // static mojo::PendingRemote<mojom::SdkController> GetForContext(
-  //     content::BrowserContext* context);
-  static skus::SdkController* GetForContext(
+  static mojo::PendingRemote<mojom::SdkController> GetForContext(
+      content::BrowserContext* context);
+  static skus::SdkController* GetControllerForContext(
       content::BrowserContext* context);
   static SdkControllerFactory* GetInstance();
 
