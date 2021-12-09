@@ -21,6 +21,7 @@
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/resources/frequency_capping/anti_targeting_resource.h"
 #include "bat/ads/internal/segments/segments_aliases.h"
+#include "bat/ads/internal/time_profiler.h"
 
 namespace ads {
 namespace inline_content_ads {
@@ -38,10 +39,17 @@ void EligibleAdsV2::GetForUserModel(
     GetEligibleAdsCallback<CreativeInlineContentAdList> callback) {
   BLOG(1, "Get eligible inline content ads:");
 
+  TIME_PROFILER_BEGIN();
+
   database::table::AdEvents database_table;
   database_table.GetAll([=](const bool success, const AdEventList& ad_events) {
+    TIME_PROFILER_MEASURE_WITH_MESSAGE("AdEvents.GetAll");
+
     if (!success) {
       BLOG(1, "Failed to get ad events");
+
+      TIME_PROFILER_END();
+
       callback(/* had_opportunity */ false, {});
       return;
     }
@@ -50,6 +58,8 @@ void EligibleAdsV2::GetForUserModel(
     const int days_ago = features::GetBrowsingHistoryDaysAgo();
     AdsClientHelper::Get()->GetBrowsingHistory(
         max_count, days_ago, [=](const BrowsingHistoryList& browsing_history) {
+          TIME_PROFILER_MEASURE_WITH_MESSAGE("GetBrowsingHistory");
+
           GetEligibleAds(user_model, ad_events, browsing_history, dimensions,
                          callback);
         });
@@ -68,8 +78,13 @@ void EligibleAdsV2::GetEligibleAds(
   database_table.GetForDimensions(
       dimensions,
       [=](const bool success, const CreativeInlineContentAdList& creative_ads) {
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("GetEligibleAds");
+
         if (!success) {
           BLOG(1, "Failed to get ads");
+
+          TIME_PROFILER_END();
+
           callback(/* had_opportunity */ false, {});
           return;
         }
@@ -79,12 +94,18 @@ void EligibleAdsV2::GetEligibleAds(
 
         if (eligible_creative_ads.empty()) {
           BLOG(1, "No eligible ads");
+
+          TIME_PROFILER_END();
+
           callback(/* had_opportunity */ true, {});
           return;
         }
 
         const CreativeInlineContentAdInfo creative_ad =
             ChooseAd(user_model, ad_events, eligible_creative_ads);
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("ChooseAd");
+
+        TIME_PROFILER_END();
 
         callback(/* had_opportunity */ true, {creative_ad});
       });
@@ -103,6 +124,7 @@ CreativeInlineContentAdList EligibleAdsV2::FilterCreativeAds(
       browsing_history);
   const CreativeInlineContentAdList& eligible_creative_ads =
       ApplyFrequencyCapping(creative_ads, last_served_ad_, &exclusion_rules);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("ApplyFrequencyCapping");
 
   return eligible_creative_ads;
 }

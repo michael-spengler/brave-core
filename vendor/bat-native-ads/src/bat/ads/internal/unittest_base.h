@@ -11,15 +11,18 @@
 
 #include "base/files/scoped_temp_dir.h"
 #include "base/test/task_environment.h"
+#include "bat/ads/ads_client.h"
 #include "bat/ads/database.h"
 #include "bat/ads/internal/account/confirmations/confirmations_state.h"
 #include "bat/ads/internal/ads/ad_notifications/ad_notifications.h"
+#include "bat/ads/internal/ads_client_helper.h"
 #include "bat/ads/internal/ads_client_mock.h"
 #include "bat/ads/internal/ads_impl.h"
 #include "bat/ads/internal/browser_manager/browser_manager.h"
-#include "bat/ads/internal/database/database_initialize.h"
+#include "bat/ads/internal/client/client.h"
 #include "bat/ads/internal/platform/platform_helper_mock.h"
 #include "bat/ads/internal/tab_manager/tab_manager.h"
+#include "bat/ads/internal/time_profiler.h"
 #include "bat/ads/internal/user_activity/user_activity.h"
 #include "brave/components/l10n/browser/locale_helper_mock.h"
 #include "testing/gmock/include/gmock/gmock.h"
@@ -31,6 +34,12 @@ class TimeDelta;
 }  // namespace base
 
 namespace ads {
+
+namespace database {
+class Initialize;
+}  // namespace database
+
+class Database;
 
 class UnitTestBase : public testing::Test {
  public:
@@ -103,6 +112,7 @@ class UnitTestBase : public testing::Test {
 
   std::unique_ptr<AdsClientHelper> ads_client_helper_;
   std::unique_ptr<Client> client_;
+  std::unique_ptr<TimeProfiler> time_profiler_;
   std::unique_ptr<AdNotifications> ad_notifications_;
   std::unique_ptr<ConfirmationsState> confirmations_state_;
   std::unique_ptr<database::Initialize> database_initialize_;

@@ -32,6 +32,7 @@
 #include "bat/ads/internal/segments/segments_aliases.h"
 #include "bat/ads/internal/settings/settings.h"
 #include "bat/ads/internal/time_formatting_util.h"
+#include "bat/ads/internal/time_profiler.h"
 #include "bat/ads/pref_names.h"
 
 namespace ads {
@@ -112,25 +113,32 @@ void AdServing::MaybeServeAd() {
     return;
   }
 
+  TIME_PROFILER_BEGIN();
+
   frequency_capping::PermissionRules permission_rules;
   if (!permission_rules.HasPermission()) {
     BLOG(1, "Ad notification not served: Not allowed due to permission rules");
     FailedToServeAd();
     return;
   }
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("PermissionRules");
 
   const ad_targeting::UserModelInfo user_model = ad_targeting::BuildUserModel();
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("BuildUserModel");
 
   DCHECK(eligible_ads_);
   eligible_ads_->GetForUserModel(
       user_model, [=](const bool had_opportunity,
                       const CreativeAdNotificationList& creative_ads) {
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForUserModel");
+
         if (had_opportunity) {
           const SegmentList segments =
               ad_targeting::GetTopParentChildSegments(user_model);
           p2a::RecordAdOpportunityForSegments(AdType::kAdNotification,
                                               segments);
         }
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("HasOpportunity");
 
         if (creative_ads.empty()) {
           BLOG(1, "Ad notification not served: No eligible ads found");
@@ -266,6 +274,8 @@ bool AdServing::ServeAd(const AdNotificationInfo& ad) const {
 
   NotifyDidServeAdNotification(ad);
 
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("ServeAd");
+
   return true;
 }
 
@@ -275,6 +285,9 @@ void AdServing::FailedToServeAd() {
   NotifyFailedToServeAdNotification();
 
   RetryServingAdAtNextInterval();
+
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("FailedToServeAd");
+  TIME_PROFILER_END();
 }
 
 void AdServing::ServedAd(const AdNotificationInfo& ad) {
@@ -284,6 +297,9 @@ void AdServing::ServedAd(const AdNotificationInfo& ad) {
   is_serving_ = false;
 
   MaybeServeAdAtNextRegularInterval();
+
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("ServedAd");
+  TIME_PROFILER_END();
 }
 
 void AdServing::NotifyDidServeAdNotification(

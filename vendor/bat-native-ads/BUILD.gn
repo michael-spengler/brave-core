@@ -832,6 +832,8 @@ source_set("ads") {
     "src/bat/ads/internal/tab_manager/tab_manager.h",
     "src/bat/ads/internal/time_formatting_util.cc",
     "src/bat/ads/internal/time_formatting_util.h",
+    "src/bat/ads/internal/time_profiler.cc",
+    "src/bat/ads/internal/time_profiler.h",
     "src/bat/ads/internal/time_util.cc",
     "src/bat/ads/internal/time_util.h",
     "src/bat/ads/internal/timer.cc",

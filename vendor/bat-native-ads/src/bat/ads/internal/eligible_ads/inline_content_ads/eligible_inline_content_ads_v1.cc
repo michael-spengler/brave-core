@@ -22,6 +22,7 @@
 #include "bat/ads/internal/features/ad_serving/ad_serving_features.h"
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/resources/frequency_capping/anti_targeting_resource.h"
+#include "bat/ads/internal/time_profiler.h"
 
 namespace ads {
 namespace inline_content_ads {
@@ -39,10 +40,17 @@ void EligibleAdsV1::GetForUserModel(
     GetEligibleAdsCallback<CreativeInlineContentAdList> callback) {
   BLOG(1, "Get eligible inline content ads:");
 
+  TIME_PROFILER_BEGIN();
+
   database::table::AdEvents database_table;
   database_table.GetAll([=](const bool success, const AdEventList& ad_events) {
+    TIME_PROFILER_MEASURE_WITH_MESSAGE("AdEvents.GetAll");
+
     if (!success) {
       BLOG(1, "Failed to get ad events");
+
+      TIME_PROFILER_END();
+
       callback(/* had_opportunity */ false, {});
       return;
     }
@@ -51,6 +59,8 @@ void EligibleAdsV1::GetForUserModel(
     const int days_ago = features::GetBrowsingHistoryDaysAgo();
     AdsClientHelper::Get()->GetBrowsingHistory(
         max_count, days_ago, [=](const BrowsingHistoryList& browsing_history) {
+          TIME_PROFILER_MEASURE_WITH_MESSAGE("GetBrowsingHistory");
+
           GetEligibleAds(user_model, dimensions, ad_events, browsing_history,
                          callback);
         });
@@ -75,6 +85,8 @@ void EligibleAdsV1::GetForParentChildSegments(
     const AdEventList& ad_events,
     const BrowsingHistoryList& browsing_history,
     GetEligibleAdsCallback<CreativeInlineContentAdList> callback) {
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForParentChildSegments");
+
   const SegmentList segments =
       ad_targeting::GetTopParentChildSegments(user_model);
   if (segments.empty()) {
@@ -93,6 +105,8 @@ void EligibleAdsV1::GetForParentChildSegments(
       segments, dimensions,
       [=](const bool success, const SegmentList& segments,
           const CreativeInlineContentAdList& creative_ads) {
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForSegments");
+
         const CreativeInlineContentAdList eligible_creative_ads =
             FilterCreativeAds(creative_ads, ad_events, browsing_history);
 
@@ -102,6 +116,8 @@ void EligibleAdsV1::GetForParentChildSegments(
                                browsing_history, callback);
           return;
         }
+
+        TIME_PROFILER_END();
 
         callback(/* had_opportunity */ true, eligible_creative_ads);
       });
@@ -113,6 +129,8 @@ void EligibleAdsV1::GetForParentSegments(
     const AdEventList& ad_events,
     const BrowsingHistoryList& browsing_history,
     GetEligibleAdsCallback<CreativeInlineContentAdList> callback) {
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForParentSegments");
+
   const SegmentList segments = ad_targeting::GetTopParentSegments(user_model);
   if (segments.empty()) {
     GetForUntargeted(dimensions, ad_events, browsing_history, callback);
@@ -129,6 +147,8 @@ void EligibleAdsV1::GetForParentSegments(
       segments, dimensions,
       [=](const bool success, const SegmentList& segments,
           const CreativeInlineContentAdList& creative_ads) {
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForSegments");
+
         const CreativeInlineContentAdList eligible_creative_ads =
             FilterCreativeAds(creative_ads, ad_events, browsing_history);
 
@@ -137,6 +157,8 @@ void EligibleAdsV1::GetForParentSegments(
           GetForUntargeted(dimensions, ad_events, browsing_history, callback);
           return;
         }
+
+        TIME_PROFILER_END();
 
         callback(/* had_opportunity */ true, eligible_creative_ads);
       });
@@ -149,17 +171,23 @@ void EligibleAdsV1::GetForUntargeted(
     GetEligibleAdsCallback<CreativeInlineContentAdList> callback) {
   BLOG(1, "Get eligible ads for untargeted segment");
 
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForUntargeted");
+
   database::table::CreativeInlineContentAds database_table;
   database_table.GetForSegmentsAndDimensions(
       {kUntargeted}, dimensions,
       [=](const bool success, const SegmentList& segments,
           const CreativeInlineContentAdList& creative_ads) {
+        TIME_PROFILER_MEASURE_WITH_MESSAGE("GetForSegments");
+
         const CreativeInlineContentAdList eligible_creative_ads =
             FilterCreativeAds(creative_ads, ad_events, browsing_history);
 
         if (eligible_creative_ads.empty()) {
           BLOG(1, "No eligible ads for untargeted segment");
         }
+
+        TIME_PROFILER_END();
 
         callback(/* had_opportunity */ true, eligible_creative_ads);
       });
@@ -180,16 +208,22 @@ CreativeInlineContentAdList EligibleAdsV1::FilterCreativeAds(
       browsing_history);
   eligible_creative_ads = ApplyFrequencyCapping(
       eligible_creative_ads, last_served_ad_, &exclusion_rules);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("ApplyFrequencyCapping");
 
   eligible_creative_ads = FilterSeenAdvertisersAndRoundRobinIfNeeded(
       eligible_creative_ads, AdType::kInlineContentAd);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE(
+      "FilterSeenAdvertisersAndRoundRobinIfNeeded");
 
   eligible_creative_ads = FilterSeenAdsAndRoundRobinIfNeeded(
       eligible_creative_ads, AdType::kInlineContentAd);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("FilterSeenAdsAndRoundRobinIfNeeded");
 
   eligible_creative_ads = PaceAds(eligible_creative_ads);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("PaceAds");
 
   eligible_creative_ads = PrioritizeAds(eligible_creative_ads);
+  TIME_PROFILER_MEASURE_WITH_MESSAGE("PrioritizeAds");
 
   return eligible_creative_ads;
 }

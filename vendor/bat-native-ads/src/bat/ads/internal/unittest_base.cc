@@ -9,9 +9,8 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/time/time.h"
-#include "bat/ads/ads_client.h"
-#include "bat/ads/internal/ads_client_helper.h"
-#include "bat/ads/internal/client/client.h"
+#include "bat/ads/database.h"
+#include "bat/ads/internal/database/database_initialize.h"
 #include "bat/ads/internal/unittest_file_util.h"
 #include "bat/ads/internal/unittest_time_util.h"
 #include "bat/ads/internal/unittest_util.h"
@@ -190,6 +189,8 @@ void UnitTestBase::Initialize() {
 
   ads_client_helper_ =
       std::make_unique<AdsClientHelper>(ads_client_mock_.get());
+
+  time_profiler_ = std::make_unique<TimeProfiler>();
 
   client_ = std::make_unique<Client>();
   client_->Initialize([](const bool success) { ASSERT_TRUE(success); });
