@@ -3,42 +3,41 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "brave/browser/skus/skus_sdk_mojom_impl.h"
+#include "brave/browser/skus/sdk_provider_impl.h"
 
 #include <memory>
 #include <utility>
 
-#include "brave/browser/skus/skus_sdk_service_factory.h"
-#include "brave/components/skus/browser/skus_sdk_service.h"
+#include "brave/browser/skus/sdk_controller_factory.h"
+#include "brave/components/skus/browser/sdk_controller.h"
 #include "content/public/browser/browser_context.h"
 
 namespace skus {
 
-SkusSdkMojomImpl::SkusSdkMojomImpl(SkusSdkService* service)
-    : service_(service) {}
+SdkProviderImpl::SdkProviderImpl(SdkController* service) : service_(service) {}
 
-SkusSdkMojomImpl::~SkusSdkMojomImpl() {}
+SdkProviderImpl::~SdkProviderImpl() {}
 
-void SkusSdkMojomImpl::RefreshOrder(const std::string& order_id,
-                                    RefreshOrderCallback callback) {
+void SdkProviderImpl::RefreshOrder(const std::string& order_id,
+                                   RefreshOrderCallback callback) {
   service_->RefreshOrder(order_id, std::move(callback));
 }
 
-void SkusSdkMojomImpl::FetchOrderCredentials(
+void SdkProviderImpl::FetchOrderCredentials(
     const std::string& order_id,
     FetchOrderCredentialsCallback callback) {
   service_->FetchOrderCredentials(order_id, std::move(callback));
 }
 
-void SkusSdkMojomImpl::PrepareCredentialsPresentation(
+void SdkProviderImpl::PrepareCredentialsPresentation(
     const std::string& domain,
     const std::string& path,
     PrepareCredentialsPresentationCallback callback) {
   service_->PrepareCredentialsPresentation(domain, path, std::move(callback));
 }
 
-void SkusSdkMojomImpl::CredentialSummary(const std::string& domain,
-                                         CredentialSummaryCallback callback) {
+void SdkProviderImpl::CredentialSummary(const std::string& domain,
+                                        CredentialSummaryCallback callback) {
   service_->CredentialSummary(domain, std::move(callback));
 }
 

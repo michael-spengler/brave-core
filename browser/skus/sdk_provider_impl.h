@@ -3,8 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef BRAVE_BROWSER_SKUS_SKUS_SDK_MOJOM_IMPL_H_
-#define BRAVE_BROWSER_SKUS_SKUS_SDK_MOJOM_IMPL_H_
+#ifndef BRAVE_BROWSER_SKUS_SDK_PROVIDER_IMPL_H_
+#define BRAVE_BROWSER_SKUS_SDK_PROVIDER_IMPL_H_
 
 #include <string>
 
@@ -12,15 +12,15 @@
 
 namespace skus {
 
-class SkusSdkService;
+class SdkController;
 
-class SkusSdkMojomImpl final : public skus::mojom::SkusSdk {
+class SdkProviderImpl final : public skus::mojom::SdkController {
  public:
-  SkusSdkMojomImpl(const SkusSdkMojomImpl&) = delete;
-  SkusSdkMojomImpl& operator=(const SkusSdkMojomImpl&) = delete;
+  SdkProviderImpl(const SdkProviderImpl&) = delete;
+  SdkProviderImpl& operator=(const SdkProviderImpl&) = delete;
 
-  explicit SkusSdkMojomImpl(SkusSdkService* service);
-  ~SkusSdkMojomImpl() override;
+  explicit SdkProviderImpl(SdkController* service);
+  ~SdkProviderImpl() override;
 
   void RefreshOrder(const std::string& order_id,
                     RefreshOrderCallback callback) override;
@@ -34,9 +34,9 @@ class SkusSdkMojomImpl final : public skus::mojom::SkusSdk {
                          CredentialSummaryCallback callback) override;
 
  private:
-  SkusSdkService* service_;
+  SdkController* service_;
 };
 
 }  // namespace skus
 
-#endif  // BRAVE_BROWSER_SKUS_SKUS_SDK_MOJOM_IMPL_H_
+#endif  // BRAVE_BROWSER_SKUS_SDK_PROVIDER_IMPL_H_

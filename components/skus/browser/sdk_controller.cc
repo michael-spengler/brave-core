@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "brave/components/skus/browser/skus_sdk_service.h"
+#include "brave/components/skus/browser/sdk_controller.h"
 
 #include <utility>
 
@@ -82,22 +82,20 @@ void OnCredentialSummary(skus::CredentialSummaryCallbackState* callback_state,
 
 namespace skus {
 
-SkusSdkService::SkusSdkService(
+SdkController::SdkController(
     PrefService* prefs,
     scoped_refptr<network::SharedURLLoaderFactory> url_loader_factory)
-    : context_(std::make_unique<skus::SkusSdkContextImpl>(
-          prefs,
-          url_loader_factory)),
-      sdk_(
-          initialize_sdk(std::move(context_), skus::GetEnvironment())),
+    : context_(std::make_unique<skus::SkusSdkContextImpl>(prefs,
+                                                          url_loader_factory)),
+      sdk_(initialize_sdk(std::move(context_), skus::GetEnvironment())),
       prefs_(prefs),
       weak_factory_(this) {}
 
-SkusSdkService::~SkusSdkService() {}
+SdkController::~SdkController() {}
 
-void SkusSdkService::RefreshOrder(
+void SdkController::RefreshOrder(
     const std::string& order_id,
-    skus::mojom::SkusSdk::RefreshOrderCallback callback) {
+    mojom::SdkController::RefreshOrderCallback callback) {
   std::unique_ptr<skus::RefreshOrderCallbackState> cbs(
       new skus::RefreshOrderCallbackState);
   cbs->cb = std::move(callback);
@@ -105,9 +103,9 @@ void SkusSdkService::RefreshOrder(
   sdk_->refresh_order(OnRefreshOrder, std::move(cbs), order_id.c_str());
 }
 
-void SkusSdkService::FetchOrderCredentials(
+void SdkController::FetchOrderCredentials(
     const std::string& order_id,
-    skus::mojom::SkusSdk::FetchOrderCredentialsCallback callback) {
+    mojom::SdkController::FetchOrderCredentialsCallback callback) {
   std::unique_ptr<skus::FetchOrderCredentialsCallbackState> cbs(
       new skus::FetchOrderCredentialsCallbackState);
   cbs->cb = std::move(callback);
@@ -117,12 +115,12 @@ void SkusSdkService::FetchOrderCredentials(
                                 order_id.c_str());
 }
 
-void SkusSdkService::PrepareCredentialsPresentation(
+void SdkController::PrepareCredentialsPresentation(
     const std::string& domain,
     const std::string& path,
-    skus::mojom::SkusSdk::PrepareCredentialsPresentationCallback callback) {
-  std::unique_ptr<skus::PrepareCredentialsPresentationCallbackState>
-      cbs(new skus::PrepareCredentialsPresentationCallbackState);
+    mojom::SdkController::PrepareCredentialsPresentationCallback callback) {
+  std::unique_ptr<skus::PrepareCredentialsPresentationCallbackState> cbs(
+      new skus::PrepareCredentialsPresentationCallbackState);
   cbs->cb = std::move(callback);
   cbs->domain = domain;
   cbs->prefs = prefs_;
@@ -131,9 +129,9 @@ void SkusSdkService::PrepareCredentialsPresentation(
                                          std::move(cbs), domain, path);
 }
 
-void SkusSdkService::CredentialSummary(
+void SdkController::CredentialSummary(
     const std::string& domain,
-    skus::mojom::SkusSdk::CredentialSummaryCallback callback) {
+    mojom::SdkController::CredentialSummaryCallback callback) {
   std::unique_ptr<skus::CredentialSummaryCallbackState> cbs(
       new skus::CredentialSummaryCallbackState);
   cbs->cb = std::move(callback);

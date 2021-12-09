@@ -3,7 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "brave/browser/skus/skus_sdk_service_factory.h"
+#include "brave/browser/skus/sdk_controller_factory.h"
 
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/components/skus/browser/pref_names.h"
@@ -13,41 +13,66 @@
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/storage_partition.h"
 
+namespace {
+
+bool IsAllowedForContext(content::BrowserContext* context) {
+  if (context && !brave::IsRegularProfile(context))
+    return false;
+
+  return true;
+}
+
+}  // namespace
+
 namespace skus {
 
 // static
-SkusSdkServiceFactory* SkusSdkServiceFactory::GetInstance() {
-  return base::Singleton<SkusSdkServiceFactory>::get();
+SdkControllerFactory* SdkControllerFactory::GetInstance() {
+  return base::Singleton<SdkControllerFactory>::get();
 }
 
 // static
-skus::SkusSdkService* SkusSdkServiceFactory::GetForContext(
+// mojo::PendingRemote<mojom::SdkController> SdkControllerFactory::GetForContext(
+//     content::BrowserContext* context) {
+//   if (!IsAllowedForContext(context)) {
+//     return mojo::PendingRemote<mojom::SdkController>();
+//   }
+//   return static_cast<skus::SdkController*>(
+//              GetInstance()->GetServiceForBrowserContext(context, true))
+//       ->MakeRemote();
+// }
+
+// static
+skus::SdkController* SdkControllerFactory::GetForContext(
     content::BrowserContext* context) {
-  return static_cast<skus::SkusSdkService*>(
+  if (!IsAllowedForContext(context)) {
+    return nullptr;
+  }
+  return static_cast<skus::SdkController*>(
       GetInstance()->GetServiceForBrowserContext(context, true));
 }
 
-SkusSdkServiceFactory::SkusSdkServiceFactory()
+SdkControllerFactory::SdkControllerFactory()
     : BrowserContextKeyedServiceFactory(
-          "SkusSdkService",
+          "SdkController",
           BrowserContextDependencyManager::GetInstance()) {}
 
-SkusSdkServiceFactory::~SkusSdkServiceFactory() = default;
+SdkControllerFactory::~SdkControllerFactory() = default;
 
-KeyedService* SkusSdkServiceFactory::BuildServiceInstanceFor(
+KeyedService* SdkControllerFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
   // Skus functionality not supported in private / Tor / guest windows
   if (!brave::IsRegularProfile(context)) {
     return nullptr;
   }
 
-  return new skus::SkusSdkService(
+  return new skus::SdkController(
       Profile::FromBrowserContext(context)->GetPrefs(),
       context->GetDefaultStoragePartition()
           ->GetURLLoaderFactoryForBrowserProcess());
 }
 
-void SkusSdkServiceFactory::RegisterProfilePrefs(
+void SdkControllerFactory::RegisterProfilePrefs(
     user_prefs::PrefRegistrySyncable* registry) {
   registry->RegisterDictionaryPref(prefs::kSkusState);
   registry->RegisterBooleanPref(prefs::kSkusVPNHasCredential, false);

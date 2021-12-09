@@ -31,8 +31,8 @@
 #include "brave/browser/profiles/brave_renderer_updater.h"
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
 #include "brave/browser/profiles/profile_util.h"
-#include "brave/browser/skus/skus_sdk_mojom_impl.h"
-#include "brave/browser/skus/skus_sdk_service_factory.h"
+#include "brave/browser/skus/sdk_controller_factory.h"
+#include "brave/browser/skus/sdk_provider_impl.h"
 #include "brave/common/pref_names.h"
 #include "brave/common/webui_url_constants.h"
 #include "brave/components/binance/browser/buildflags/buildflags.h"
@@ -323,12 +323,12 @@ void BindBraveSearchDefaultHost(
 
 void MaybeBindSkusSdkImpl(
     content::RenderFrameHost* const frame_host,
-    mojo::PendingReceiver<skus::mojom::SkusSdk> receiver) {
+    mojo::PendingReceiver<skus::mojom::SdkController> receiver) {
   auto* context = frame_host->GetBrowserContext();
-  auto* service = skus::SkusSdkServiceFactory::GetForContext(context);
+  auto* service = skus::SdkControllerFactory::GetForContext(context);
   if (service) {
     mojo::MakeSelfOwnedReceiver(
-        std::make_unique<skus::SkusSdkMojomImpl>(service), std::move(receiver));
+        std::make_unique<skus::SdkProviderImpl>(service), std::move(receiver));
   }
 }
 
@@ -448,7 +448,7 @@ void BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
         base::BindRepeating(&MaybeBindBraveWalletProvider));
   }
 
-  map->Add<skus::mojom::SkusSdk>(
+  map->Add<skus::mojom::SdkController>(
         base::BindRepeating(&MaybeBindSkusSdkImpl));
 
 #if !defined(OS_ANDROID)

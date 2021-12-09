@@ -54,36 +54,37 @@ struct CppSDK;
 //
 // For more information, please see:
 // https://github.com/brave-intl/br-rs/tree/skus
-class SkusSdkService : public KeyedService, public skus::mojom::SkusSdk {
+class SdkController : public KeyedService, public mojom::SdkController {
  public:
-  explicit SkusSdkService(
+  explicit SdkController(
       PrefService* prefs,
       scoped_refptr<network::SharedURLLoaderFactory> url_loader_factory);
-  ~SkusSdkService() override;
+  ~SdkController() override;
 
-  SkusSdkService(const SkusSdkService&) = delete;
-  SkusSdkService& operator=(SkusSdkService&) = delete;
+  SdkController(const SdkController&) = delete;
+  SdkController& operator=(SdkController&) = delete;
 
   void RefreshOrder(
       const std::string& order_id,
-      skus::mojom::SkusSdk::RefreshOrderCallback callback) override;
+      skus::mojom::SdkController::RefreshOrderCallback callback) override;
   void FetchOrderCredentials(
       const std::string& order_id,
-      skus::mojom::SkusSdk::FetchOrderCredentialsCallback callback) override;
+      skus::mojom::SdkController::FetchOrderCredentialsCallback callback)
+      override;
   void PrepareCredentialsPresentation(
       const std::string& domain,
       const std::string& path,
-      skus::mojom::SkusSdk::PrepareCredentialsPresentationCallback callback)
-      override;
+      skus::mojom::SdkController::PrepareCredentialsPresentationCallback
+          callback) override;
   void CredentialSummary(
       const std::string& domain,
-      skus::mojom::SkusSdk::CredentialSummaryCallback callback) override;
+      skus::mojom::SdkController::CredentialSummaryCallback callback) override;
 
  private:
   std::unique_ptr<skus::SkusSdkContextImpl> context_;
   ::rust::Box<skus::CppSDK> sdk_;
   PrefService* prefs_;
-  base::WeakPtrFactory<SkusSdkService> weak_factory_;
+  base::WeakPtrFactory<SdkController> weak_factory_;
 };
 
 }  // namespace skus
