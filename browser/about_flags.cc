@@ -24,6 +24,7 @@
 #include "brave/components/ipfs/buildflags/buildflags.h"
 #include "brave/components/ntp_background_images/browser/features.h"
 #include "brave/components/sidebar/buildflags/buildflags.h"
+#include "brave/components/skus/common/features.h"
 #include "brave/components/speedreader/buildflags.h"
 #include "brave/components/translate/core/common/brave_translate_features.h"
 #include "brave/components/translate/core/common/buildflags.h"
@@ -181,6 +182,9 @@ constexpr char kBraveSyncDescription[] =
 constexpr char kBraveVPNName[] = "Enable experimental Brave VPN";
 constexpr char kBraveVPNDescription[] = "Experimental native VPN support";
 
+constexpr char kBraveSkuSdkName[] = "Enable experimental SKU SDK";
+constexpr char kBraveSkuSdkDescription[] = "Experimental SKU SDK support";
+
 constexpr char kBraveDecentralizedDnsName[] = "Enable decentralized DNS";
 constexpr char kBraveDecentralizedDnsDescription[] =
     "Enable decentralized DNS support, such as Unstoppable Domains and "
@@ -279,6 +283,13 @@ constexpr char kFileSystemAccessAPIDescription[] =
 #else
 #define BRAVE_VPN_FEATURE_ENTRIES
 #endif
+
+#define BRAVE_SKU_SDK_FEATURE_ENTRIES                  \
+    {"sku-sdk",                                        \
+     flag_descriptions::kBraveSkuSdkName,              \
+     flag_descriptions::kBraveSkuSdkDescription,       \
+     kOsMac | kOsWin,                                  \
+     FEATURE_VALUE_TYPE(skus::features::kSdkFeature)},
 
 #if BUILDFLAG(ENABLE_SIDEBAR)
 #define SIDEBAR_FEATURE_ENTRIES                     \
@@ -480,6 +491,7 @@ constexpr char kFileSystemAccessAPIDescription[] =
     CRYPTO_WALLETS_FEATURE_ENTRIES                                          \
     BRAVE_REWARDS_GEMINI_FEATURE_ENTRIES                                    \
     BRAVE_VPN_FEATURE_ENTRIES                                               \
+    BRAVE_SKU_SDK_FEATURE_ENTRIES                                           \
     SIDEBAR_FEATURE_ENTRIES                                                 \
     SPEEDREADER_FEATURE_ENTRIES                                             \
     BRAVE_TRANSLATE_GO_FEATURE_ENTRIES
