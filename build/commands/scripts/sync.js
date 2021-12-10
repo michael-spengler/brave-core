@@ -12,7 +12,6 @@ const os = require('os')
 
 program
   .version(process.env.npm_package_version)
-  .arguments('[ref]')
   .option('--gclient_file <file>', 'gclient config file location')
   .option('--gclient_verbose', 'verbose output for gclient')
   .option('--run_hooks', 'This flag is deprecated and no longer has any effect')
@@ -62,12 +61,6 @@ async function RunCommand () {
     Log.warn('--all, --run_hooks and --run_sync are deprecated. Will behave as if flag was not passed. Please update your command to `npm run sync` in the future.')
   }
 
-  let braveCoreRef = program.args[0]
-  if (braveCoreRef && !program.init) {
-    Log.error('[ref] option requies --init to work correctly')
-    process.exit(1)
-  }
-
   if (program.init || !fs.existsSync(config.depotToolsDir)) {
     installDepotTools()
   }
@@ -76,20 +69,8 @@ async function RunCommand () {
     util.buildGClientConfig()
   }
 
-  if (!braveCoreRef) {
-    braveCoreRef = program.init ? config.getProjectVersion('brave-core') : null
-  }
-
-  if (braveCoreRef || program.init || program.force) {
-    // we're doing a reset of brave-core so try to stash any changes
-    Log.progress('Stashing any local changes')
-    util.runGit(config.braveCoreDir, ['stash'], true)
-  }
-
   Log.progress('Running gclient sync...')
-  const result = util.gclientSync(program.init || program.force, program.init, braveCoreRef, !program.ignore_chromium)
-  const postSyncBraveCoreRef = util.getGitReadableLocalRef(config.braveCoreDir)
-  Log.status(`Brave Core is now at ${postSyncBraveCoreRef || '[unknown]'}`)
+  const result = util.gclientSync(program.init || program.force, program.init, !program.ignore_chromium)
   if (result.didUpdateChromium) {
     const postSyncChromiumRef = util.getGitReadableLocalRef(config.srcDir)
     Log.status(`Chromium is now at ${postSyncChromiumRef || '[unknown]'}`)
