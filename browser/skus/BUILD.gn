@@ -9,8 +9,6 @@ source_set("skus") {
   sources = [
     "//brave/browser/skus/sdk_controller_factory.cc",
     "//brave/browser/skus/sdk_controller_factory.h",
-    "//brave/browser/skus/sdk_provider_impl.cc",
-    "//brave/browser/skus/sdk_provider_impl.h",
   ]
 
   deps = [

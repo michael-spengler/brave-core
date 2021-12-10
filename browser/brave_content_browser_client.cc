@@ -32,7 +32,6 @@
 #include "brave/browser/profiles/brave_renderer_updater_factory.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/skus/sdk_controller_factory.h"
-#include "brave/browser/skus/sdk_provider_impl.h"
 #include "brave/common/pref_names.h"
 #include "brave/common/webui_url_constants.h"
 #include "brave/components/binance/browser/buildflags/buildflags.h"
@@ -327,8 +326,7 @@ void MaybeBindSkusSdkImpl(
   auto* context = frame_host->GetBrowserContext();
   auto* service = skus::SdkControllerFactory::GetControllerForContext(context);
   if (service) {
-    mojo::MakeSelfOwnedReceiver(
-        std::make_unique<skus::SdkProviderImpl>(service), std::move(receiver));
+    service->Bind(std::move(receiver));
   }
 }
 

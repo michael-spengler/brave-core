@@ -429,8 +429,15 @@ void BraveVpnServiceDesktop::OnPrepareCredentialsPresentation(
   // Credential is returned in cookie format.
   net::CookieInclusionStatus status;
   net::ParsedCookie credential_cookie(credential_as_cookie, &status);
-  DCHECK(credential_cookie.IsValid());
-  DCHECK(status.IsInclude());
+  // TODO(bsclifton): have a better check / logging.
+  if (!credential_cookie.IsValid()) {
+    LOG(ERROR) << "FAILED credential_cookie.IsValid";
+    return;
+  }
+  if (!status.IsInclude()) {
+    LOG(ERROR) << "FAILED status.IsInclude";
+    return;
+  }
 
   // Credential value received needs to be URL decoded.
   // That leaves us with a Base64 encoded JSON blob which is the credential.
