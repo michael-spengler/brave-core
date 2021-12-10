@@ -11,7 +11,7 @@
 #include "brave/ios/browser/brave_wallet/eth_tx_controller_factory.h"
 #include "brave/ios/browser/brave_wallet/keyring_controller_factory.h"
 #include "brave/ios/browser/brave_wallet/swap_controller_factory.h"
-#include "brave/ios/browser/skus/skus_sdk_service_factory.h"
+#include "brave/ios/browser/skus/sdk_controller_factory.h"
 
 namespace brave {
 
@@ -22,7 +22,7 @@ void EnsureBrowserStateKeyedServiceFactoriesBuilt() {
   brave_wallet::EthTxControllerFactory::GetInstance();
   brave_wallet::KeyringControllerFactory::GetInstance();
   brave_wallet::SwapControllerFactory::GetInstance();
-  skus::SkusSdkServiceFactory::GetInstance();
+  skus::SdkControllerFactory::GetInstance();
 }
 
 }  // namespace brave
