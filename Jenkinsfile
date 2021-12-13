@@ -100,7 +100,9 @@ pipeline {
                                                 credentials('brave-builds-github-token-for-pr-builder')
                                                 github('brave/devops', 'https')
                                             }
-                                            branch('${params.DEVOPS_BRANCH}')
+                                            //FIXME: revert before merging!
+                                            //branch('${params.DEVOPS_BRANCH}')
+                                            branch('wknapik-sync-instead-of-init')
                                         }
                                     }
                                     scriptPath("jenkins/jobs/browser/pr-brave-browser-${PLATFORM}.Jenkinsfile")
