@@ -43,9 +43,11 @@ AdBlockRegionalServiceManager::AdBlockRegionalServiceManager(
       component_update_service_(cus) {}
 
 void AdBlockRegionalServiceManager::Init(
-    AdBlockResourceProvider* resource_provider) {
+    AdBlockResourceProvider* resource_provider,
+    AdBlockRegionalCatalogProvider* catalog_provider) {
   DCHECK(!initialized_);
   resource_provider_ = resource_provider;
+  catalog_provider->AddObserver(this);
   initialized_ = true;
 }
 
@@ -331,6 +333,11 @@ AdBlockRegionalServiceManager::GetRegionalLists() {
   }
 
   return list_value;
+}
+
+void AdBlockRegionalServiceManager::OnRegionalCatalogLoaded(
+    const std::string& catalog_json) {
+  SetRegionalCatalog(RegionalCatalogFromJSON(catalog_json));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
