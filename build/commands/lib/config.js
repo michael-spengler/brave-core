@@ -171,6 +171,7 @@ const Config = function () {
   this.braveAndroidKeystorePassword = getNPMConfig(['brave_android_keystore_password'])
   this.braveAndroidKeyPassword = getNPMConfig(['brave_android_key_password'])
   this.braveVariationsServerUrl = getNPMConfig(['brave_variations_server_url']) || ''
+  this.braveVariationsInsecureServerUrl = getNPMConfig(['brave_variations_insecure_server_url']) || ''
 }
 
 Config.prototype.isOfficialBuild = function () {
@@ -273,6 +274,7 @@ Config.prototype.buildArgs = function () {
     brave_sync_endpoint: this.braveSyncEndpoint,
     safebrowsing_api_endpoint: this.safeBrowsingApiEndpoint,
     brave_variations_server_url: this.braveVariationsServerUrl,
+    brave_variations_insecure_server_url: this.braveVariationsInsecureServerUrl,
     updater_prod_endpoint: this.updaterProdEndpoint,
     updater_dev_endpoint: this.updaterDevEndpoint,
     webcompat_report_api_endpoint: this.webcompatReportApiEndpoint,
@@ -495,6 +497,7 @@ Config.prototype.buildArgs = function () {
     delete args.use_blink_v8_binding_new_idl_interface
     delete args.v8_enable_verify_heap
     delete args.brave_variations_server_url
+    delete args.brave_variations_insecure_server_url
   }
 
   if (process.platform === 'win32') {
