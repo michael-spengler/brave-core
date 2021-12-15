@@ -79,9 +79,16 @@ class KeyringController : public KeyedService, public mojom::KeyringController {
   static std::string GetAccountPathByIndex(size_t index);
 
   struct ImportedAccountInfo {
+    ImportedAccountInfo(const std::string& account_name,
+                        const std::string& account_address,
+                        const std::string& encrypted_private_key,
+                        mojom::BraveCoins coin);
+    ~ImportedAccountInfo();
+    ImportedAccountInfo(const ImportedAccountInfo& other);
     std::string account_name;
     std::string account_address;
     std::string encrypted_private_key;
+    mojom::BraveCoins coin;
   };
   static void SetImportedAccountForKeyring(PrefService* prefs,
                                            const ImportedAccountInfo& info,
@@ -142,7 +149,8 @@ class KeyringController : public KeyedService, public mojom::KeyringController {
                              RemoveImportedAccountCallback callback) override;
   void IsWalletBackedUp(IsWalletBackedUpCallback callback) override;
   void NotifyWalletBackupComplete() override;
-  void GetDefaultKeyringInfo(GetDefaultKeyringInfoCallback callback) override;
+  void GetKeyringsInfo(const std::vector<std::string>& keyrings,
+                       GetKeyringsInfoCallback callback) override;
   void GetKeyringInfo(const std::string& keyring_id,
                       GetKeyringInfoCallback callback) override;
   void Reset() override;
@@ -243,6 +251,7 @@ class KeyringController : public KeyedService, public mojom::KeyringController {
   friend class EthTxControllerUnitTest;
 
   void AddAccountForDefaultKeyring(const std::string& account_name);
+  mojom::KeyringInfoPtr GetKeyringInfoSync(const std::string& keyring_id);
   void OnAutoLockFired();
   HDKeyring* GetKeyringForAddress(const std::string& address);
   HDKeyring* GetHDKeyringById(const std::string& keyring_id) const;

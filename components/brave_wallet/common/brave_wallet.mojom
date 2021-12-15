@@ -236,9 +236,11 @@ struct AccountInfo {
   string name;
   bool is_imported;
   HardwareInfo? hardware;
+  BraveCoins coin;
 };
 
 struct KeyringInfo {
+  string id;
   bool is_default_keyring_created;
   bool is_locked;
   bool is_backed_up;
@@ -379,7 +381,7 @@ interface KeyringController {
   NotifyWalletBackupComplete();
 
   // Obtains the keyring information
-  GetDefaultKeyringInfo() => (KeyringInfo keyring);
+  GetKeyringsInfo(array<string> keyrings) => (array<KeyringInfo> keyrings);
   // Obtains the keyring information
   GetKeyringInfo(string keyringId) => (KeyringInfo keyring);
   // Resets the keyring and all preferences

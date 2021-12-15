@@ -97,44 +97,4 @@ TEST(HexUtilsUnitTest, ConcatHexStrings) {
   ASSERT_FALSE(ConcatHexStrings("0x0", "0", &out));
 }
 
-TEST(HexUtilsUnitTest, HexValueToUint256) {
-  uint256_t out;
-  ASSERT_TRUE(HexValueToUint256("0x1", &out));
-  ASSERT_EQ(out, (uint256_t)1);
-  ASSERT_TRUE(HexValueToUint256("0x1234", &out));
-  ASSERT_EQ(out, (uint256_t)4660);
-  ASSERT_TRUE(HexValueToUint256("0xB", &out));
-  ASSERT_EQ(out, (uint256_t)11);
-  uint256_t expected_val = 102400000000000;
-  // "10240000000000000000000000"
-  expected_val *= static_cast<uint256_t>(100000000000);
-  ASSERT_TRUE(HexValueToUint256("0x878678326eac900000000", &out));
-  ASSERT_TRUE(out == (uint256_t)expected_val);
-  // Check padded values too
-  ASSERT_TRUE(HexValueToUint256("0x00000000000000000000000F0", &out));
-  ASSERT_EQ(out, (uint256_t)240);
-}
-
-TEST(HexUtilsUnitTest, Uint256ValueToHex) {
-  ASSERT_EQ(Uint256ValueToHex(1), "0x1");
-  ASSERT_EQ(Uint256ValueToHex(4660), "0x1234");
-  ASSERT_EQ(Uint256ValueToHex(11), "0xb");
-  // "10240000000000000000000000"
-  uint256_t input_val = 102400000000000;
-  input_val *= static_cast<uint256_t>(100000000000);
-  ASSERT_EQ(Uint256ValueToHex(input_val), "0x878678326eac900000000");
-  ASSERT_EQ(Uint256ValueToHex(3735928559), "0xdeadbeef");
-}
-
-TEST(HexUtilsUnitTest, Division) {
-  //EXPECT_EQ(DivideHex("100000000000000000000", "1000000000000000000"), "0x64");
-  //EXPECT_EQ(DivideHex("199965236082952348343", "63576545046"), "0xbb78f8e0");
-  //EXPECT_EQ(DivideHex("10", "3"), "0x3");
-  //EXPECT_EQ(DivideHex("10", "7"), "0x1");
-  EXPECT_EQ(DivideHex("7", "3"), "");
-  brave_wallet::uint256_t one = 0;
-  brave_wallet::StringToUint256("100000000000000000000", &one);
-  EXPECT_EQ(brave_wallet::Uint256ToString(one), "");
-}
-
 }  // namespace brave_wallet

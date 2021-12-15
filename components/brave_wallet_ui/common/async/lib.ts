@@ -94,6 +94,7 @@ export async function findHardwareAccountInfo (address: string): Promise<Account
   const apiProxy = getAPIProxy()
   const result = await apiProxy.walletHandler.getWalletInfo()
   for (const account of result.accountInfos) {
+    console.log(account)
     if (!account.hardware) {
       continue
     }

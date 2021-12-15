@@ -37,9 +37,6 @@ bool ConcatHexStrings(const std::vector<std::string>& hex_inputs,
 bool HexValueToUint256(const std::string& hex_input, uint256_t* out);
 // Takes a uint256_t and converts it to a hex string
 std::string Uint256ValueToHex(uint256_t input);
-bool StringToUint256(const std::string& source, uint256_t* out);
-uint256_t divide(uint256_t a, uint256_t b, uint256_t* remainder);
-std::string Uint256ToString(uint256_t a);
 
 }  // namespace brave_wallet
 
