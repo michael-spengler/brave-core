@@ -158,14 +158,16 @@ class KeyringController : public KeyedService, public mojom::KeyringController {
       const std::string& address,
       const std::string& name,
       SetDefaultKeyringHardwareAccountNameCallback callback) override;
-  void SetDefaultKeyringDerivedAccountName(
+  void SetKeyringDerivedAccountName(
+      const std::string& keyring_id,
       const std::string& address,
       const std::string& name,
-      SetDefaultKeyringDerivedAccountNameCallback callback) override;
-  void SetDefaultKeyringImportedAccountName(
+      SetKeyringDerivedAccountNameCallback callback) override;
+  void SetKeyringImportedAccountName(
+      const std::string& keyring_id,
       const std::string& address,
       const std::string& name,
-      SetDefaultKeyringImportedAccountNameCallback callback) override;
+      SetKeyringImportedAccountNameCallback callback) override;
 
   bool IsKeyringCreated(const std::string& keyring_id);
   bool IsHardwareAccount(const std::string& account) const;

@@ -555,7 +555,12 @@ HDKeyring* KeyringController::ResumeKeyring(const std::string& keyring_id,
                              &private_key)) {
       continue;
     }
-    keyring->ImportAccount(private_key);
+    if (keyring_id == mojom::kFilecoinKeyringId) {
+      filecoin_keyring_->ImportFilecoinAccount(
+          private_key, imported_account_info.account_address);
+    } else if (keyring_id == mojom::kDefaultKeyringId) {
+      keyring->ImportAccount(private_key);
+    }
   }
 
   return keyring;
@@ -942,7 +947,7 @@ void KeyringController::GetPrivateKeyForImportedAccount(
 }
 
 HDKeyring* KeyringController::GetKeyringForAddress(const std::string& address) {
-  if (IsFilecoinEnabled() && IsFilecoinAccount(address))
+  if (IsFilecoinAccount(address))
     return filecoin_keyring_.get();
   return default_keyring_.get();
 }
@@ -964,12 +969,14 @@ void KeyringController::RemoveImportedAccount(
     const std::string& address,
     RemoveImportedAccountCallback callback) {
   auto* keyring = GetKeyringForAddress(address);
+  DLOG(INFO) << "RemoveImportedAccount:" << address << " keyring:" << keyring;
   if (address.empty() || !keyring) {
     std::move(callback).Run(false);
     return;
   }
 
   if (!keyring->RemoveImportedAccount(address)) {
+    DLOG(INFO) << "FALSE";
     std::move(callback).Run(false);
     return;
   }
@@ -1274,8 +1281,8 @@ bool KeyringController::IsHardwareAccount(const std::string& account) const {
 
 void KeyringController::Unlock(const std::string& password,
                                UnlockCallback callback) {
-  CreateKeyring(kFilecoinKeyringId, password);  // uncomment to work
-  if (!ResumeKeyring(kFilecoinKeyringId, password)) {
+  ResumeKeyring(kFilecoinKeyringId, password);
+  if (!ResumeKeyring(kDefaultKeyringId, password)) {
     encryptor_.reset();
     std::move(callback).Run(false);
     return;
@@ -1472,24 +1479,25 @@ void KeyringController::SetSelectedAccount(
   std::move(callback).Run(false);
 }
 
-void KeyringController::SetDefaultKeyringDerivedAccountName(
+void KeyringController::SetKeyringDerivedAccountName(
+    const std::string& keyring_id,
     const std::string& address,
     const std::string& name,
-    SetDefaultKeyringDerivedAccountNameCallback callback) {
-  if (address.empty() || name.empty() || !default_keyring_) {
+    SetKeyringDerivedAccountNameCallback callback) {
+  auto* keyring = GetHDKeyringById(keyring_id);
+  if (address.empty() || name.empty() || !keyring) {
     std::move(callback).Run(false);
     return;
   }
 
-  const absl::optional<size_t> index =
-      default_keyring_->GetAccountIndex(address);
+  const absl::optional<size_t> index = keyring->GetAccountIndex(address);
   if (!index) {
     std::move(callback).Run(false);
     return;
   }
 
   SetAccountMetaForKeyring(prefs_, GetAccountPathByIndex(index.value()), name,
-                           address, kDefaultKeyringId);
+                           address, keyring_id);
   NotifyAccountsChanged();
   std::move(callback).Run(true);
 }
@@ -1524,18 +1532,21 @@ void KeyringController::SetDefaultKeyringHardwareAccountName(
   std::move(callback).Run(UpdateNameForHardwareAccountSync(address, name));
 }
 
-void KeyringController::SetDefaultKeyringImportedAccountName(
+void KeyringController::SetKeyringImportedAccountName(
+    const std::string& keyring_id,
     const std::string& address,
     const std::string& name,
-    SetDefaultKeyringImportedAccountNameCallback callback) {
-  if (address.empty() || name.empty()) {
+    SetKeyringImportedAccountNameCallback callback) {
+  auto* keyring = GetHDKeyringById(keyring_id);
+  DLOG(INFO) << "keyring_id:" << keyring_id << " value:" << keyring;
+  if (address.empty() || name.empty() || !keyring) {
     std::move(callback).Run(false);
     return;
   }
 
   base::Value imported_accounts(base::Value::Type::LIST);
   const base::Value* value =
-      GetPrefForKeyring(prefs_, kImportedAccounts, kDefaultKeyringId);
+      GetPrefForKeyring(prefs_, kImportedAccounts, keyring_id);
   if (!value) {
     std::move(callback).Run(false);
     return;
@@ -1551,7 +1562,7 @@ void KeyringController::SetDefaultKeyringImportedAccountName(
     if (account_address && *account_address == address) {
       imported_accounts_list[i].SetStringKey(kAccountName, name);
       SetPrefForKeyring(prefs_, kImportedAccounts, std::move(imported_accounts),
-                        kDefaultKeyringId);
+                        keyring_id);
       NotifyAccountsChanged();
       name_updated = true;
       break;

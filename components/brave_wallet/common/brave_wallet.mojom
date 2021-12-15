@@ -211,6 +211,9 @@ const string kTrezorHardwareVendor = "Trezor";
 const string kFilecoinTestnet = "t";
 const string kFilecoinMainnet = "f";
 
+const string kFilecoinKeyringId = "filecoin";
+const string kDefaultKeyringId = "default";
+
 enum FilecoinAddressProtocol {
   SECP256K1 = 1, // Represents the address SECP256K1 protocol
   BLS = 3 // Represents the address BLS protocol
@@ -391,10 +394,10 @@ interface KeyringController {
   AddObserver(pending_remote<KeyringControllerObserver> observer);
 
   // Sets the account name for a derived account
-  SetDefaultKeyringDerivedAccountName(string address, string name) => (bool success);
+  SetKeyringDerivedAccountName(string keyring_id, string address, string name) => (bool success);
 
   // Sets the account name for an imported account
-  SetDefaultKeyringImportedAccountName(string address, string name) => (bool success);
+  SetKeyringImportedAccountName(string keyring_id, string address, string name) => (bool success);
 
   // Sets the account name for a hardware account
   SetDefaultKeyringHardwareAccountName(string address, string name) => (bool success);

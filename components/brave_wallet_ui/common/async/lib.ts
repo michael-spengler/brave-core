@@ -2,7 +2,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
-import { BraveCoins } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
+import { BraveCoins, DEFAULT_KEYRING_ID, FILECOIN_KEYRING_ID } from 'gen/brave/components/brave_wallet/common/brave_wallet.mojom.m.js'
+import { assert } from 'chrome://resources/js/assert.m.js'
 import {
   HardwareWalletConnectOpts
 } from '../../components/desktop/popup-modals/add-account-modal/hardware-wallet-connect/types'
@@ -13,7 +14,8 @@ import {
   EthereumChain,
   ERCToken,
   WalletAccountType,
-  AccountInfo
+  AccountInfo,
+  BraveKeyrings
 } from '../../constants/types'
 import * as WalletActions from '../actions/wallet_actions'
 import { GetNetworkInfo } from '../../utils/network-utils'
@@ -94,7 +96,6 @@ export async function findHardwareAccountInfo (address: string): Promise<Account
   const apiProxy = getAPIProxy()
   const result = await apiProxy.walletHandler.getWalletInfo()
   for (const account of result.accountInfos) {
-    console.log(account)
     if (!account.hardware) {
       continue
     }
@@ -103,6 +104,25 @@ export async function findHardwareAccountInfo (address: string): Promise<Account
     }
   }
   return false
+}
+
+export function getKeyringIdFromCoin(coin: BraveCoins): BraveKeyrings {
+  if (coin === BraveCoins.FILECOIN) {
+    return FILECOIN_KEYRING_ID;
+  }
+  assert(coin === BraveCoins.ETH)
+  return DEFAULT_KEYRING_ID
+}
+
+export async function getKeyringIdFromAddress (address: string): Promise<string> {
+  const apiProxy = getAPIProxy()
+  const result = await apiProxy.walletHandler.getWalletInfo()
+  for (const account of result.accountInfos) {
+    if (account.address === address) {
+      return getKeyringIdFromCoin(account.coin)
+    }
+  }
+  return getKeyringIdFromCoin(BraveCoins.ETH)
 }
 
 export function refreshBalances (currentNetwork: EthereumChain) {
