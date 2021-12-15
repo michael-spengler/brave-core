@@ -31,6 +31,7 @@ class TorLauncherFactory;
 class PrefRegistrySimple;
 class PrefService;
 
+// TODO(simonhong): Migrate to brave_new_tab_page.mojom.
 // Handles messages to and from the New Tab Page javascript
 class BraveNewTabMessageHandler : public content::WebUIMessageHandler,
                                   public TorLauncherObserver {
