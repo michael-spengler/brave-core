@@ -122,8 +122,11 @@ CHAR_LIMIT guidelines:
       <message name="IDS_SETTINGS_INCOGNITO_TAB_LOCK_SUMMARY_ANDROID_SETTING_ON" desc="Summary for a toggle in Settings that allows users to lock their existing Private tabs with a device reauthentication mechanism. This summary is shown to the user when the screen lock setting is on in the device.">
         Use screen lock to see open Private tabs
       </message>
-      <message name="IDS_USAGE_AND_CRASH_REPORTS_SUMMARY" desc="Description for 'Help improve Brave's features and performance' preference.">
-        Automatically sends crash reports to Brave
+      <message name="IDS_USAGE_AND_CRASH_REPORTS_TITLE" desc="Title for a preference that enables sending usage statistics and crash reports.">
+        Help improve Brave\u2019s product stability by automatically sending diagnostic reports when the Brave Browser crashes or freezes.
+      </message>
+      <message name="IDS_USAGE_AND_CRASH_REPORTS_SUMMARY" desc="Description for 'Help improve Brave's product stability by automatically sending diagnostic reports when the Brave Browser crashes or freezes.' preference.">
+        Automatically send disagnostic reports
       </message>
 
       <message name="IDS_DATA_REDUCTION_DESCRIPTION_LITE_MODE" desc="Text describing how the Lite mode feature works. Seen only before the user has enabled the feature.">

@@ -1298,7 +1298,7 @@ Are you sure you want to do this?
           Don't ask again
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_CONTENT_TEXT" desc="The contents for crash report ask dialog">
-          Send crash reports automatically so Brave can prevent this issue from happening again?
+          Help improve Brave's product stability by automatically sending reports when the Brave Browser crashes or hangs?
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_HEADER_TEXT" desc="The header text for crash report ask dialog">
           <ph name="BROWSER_NAME">$1<ex>Brave Browser</ex></ph> quit unexpectedly.
@@ -1307,7 +1307,7 @@ Are you sure you want to do this?
           Brave Browser
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_FOOTNOTE_TEXT" desc="The footnote text for crash report ask dialog.">
-          You can change <ph name="SETTING_TEXT">$1<ex>this setting</ex></ph> again at any time.
+          You can change <ph name="SETTING_TEXT">$1<ex>this</ex></ph> at any time in browser settings.
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_FOOTNOTE_TEXT_SETTING_PART" desc="This is used for replacing SETTING_TEXT from above FOOTNOTE_TEXT.">
           this setting

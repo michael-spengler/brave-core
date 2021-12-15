@@ -4,8 +4,11 @@
   <message name="IDS_SETTINGS_NEARBY_SHARE_DESCRIPTION" desc="A description of nearby share that helps users understand what the feature is used for.">
     Share files with profiles around you. <ph name="LINK_BEGIN">&lt;a&gt;</ph>Learn more<ph name="LINK_END">&lt;/a&gt;</ph>
   </message>
+  <message name="IDS_SETTINGS_ENABLE_LOGGING_PREF" desc="The label of the checkbox to enable/disable crash and user metrics logging. This string does not need a Brave counter-part because it will only be visible if Brave-branded.">
+    Help improve Brave's product stability by automatically sending diagnostic reports when the Brave Browser crashes or freezes.
+  </message>
   <message name="IDS_SETTINGS_ENABLE_LOGGING_PREF_DESC" desc="The description of the checkbox to enable/disable crash and user metrics logging">
-    Automatically sends crash reports to Brave
+    Automatically send disagnostic reports
   </message>
   <if expr="chromeos">
     </if>
