@@ -1298,7 +1298,7 @@ Are you sure you want to do this?
           Don't ask again
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_CONTENT_TEXT" desc="The contents for crash report ask dialog">
-          Help improve Brave's product stability by automatically sending reports when the Brave Browser crashes or hangs?
+          Help improve Brave's product stability by automatically sending diagnostic reports when the Brave Browser crashes or freezes.
         </message>
         <message name="IDS_CRASH_REPORT_PERMISSION_ASK_DIALOG_HEADER_TEXT" desc="The header text for crash report ask dialog">
           <ph name="BROWSER_NAME">$1<ex>Brave Browser</ex></ph> quit unexpectedly.
