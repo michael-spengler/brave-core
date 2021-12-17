@@ -271,6 +271,10 @@ constexpr char kFileSystemAccessAPIDescription[] =
     "Enables the File System Access API, giving websites access to the file "
     "system";
 
+constexpr char kRestrictWebSocketsPoolName[] = "Restrict WebSockets pool";
+constexpr char kRestrictWebSocketsPoolDescription[] =
+    "Limits simultaneous active WebSockets connections per eTLD+1";
+
 }  // namespace
 
 }  // namespace flag_descriptions
@@ -483,6 +487,10 @@ constexpr char kFileSystemAccessAPIDescription[] =
       flag_descriptions::kFileSystemAccessAPIName,                          \
       flag_descriptions::kFileSystemAccessAPIDescription, kOsDesktop,       \
       FEATURE_VALUE_TYPE(blink::features::kFileSystemAccessAPI)},           \
+    {"restrict-websockets-pool",                                            \
+      flag_descriptions::kRestrictWebSocketsPoolName,                       \
+      flag_descriptions::kRestrictWebSocketsPoolDescription, kOsAll,        \
+      FEATURE_VALUE_TYPE(blink::features::kRestrictWebSocketsPool)},        \
     {"tab-audio-icon-interactive",                                          \
       flag_descriptions::kTabAudioIconInteractiveName,                      \
       flag_descriptions::kTabAudioIconInteractiveDescription,               \
