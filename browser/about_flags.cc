@@ -265,11 +265,20 @@ constexpr char kTabAudioIconInteractiveDescription[] =
     "Enable the Tab audio indicator to also be a button which can mute and "
     "unmute the Tab.";
 
-// A blink feature.
+// Blink features.
 constexpr char kFileSystemAccessAPIName[] = "File System Access API";
 constexpr char kFileSystemAccessAPIDescription[] =
     "Enables the File System Access API, giving websites access to the file "
     "system";
+
+constexpr char kNavigatorConnectionAttributeName[] =
+    "Enable navigator.connection attribute";
+constexpr char kNavigatorConnectionAttributeDescription[] =
+    "Enables navigator.connection attribute. Enabling this "
+    "attribute may expose privacy harming information that can be used for "
+    "fingerprinting, as well as by more determined attackers, for potentially "
+    "learning about user's traveling patterns (including when the user is at "
+    "home or not).";
 
 }  // namespace
 
@@ -483,6 +492,10 @@ constexpr char kFileSystemAccessAPIDescription[] =
       flag_descriptions::kFileSystemAccessAPIName,                          \
       flag_descriptions::kFileSystemAccessAPIDescription, kOsDesktop,       \
       FEATURE_VALUE_TYPE(blink::features::kFileSystemAccessAPI)},           \
+    {"navigator-connection-attribute",                                      \
+      flag_descriptions::kNavigatorConnectionAttributeName,                 \
+      flag_descriptions::kNavigatorConnectionAttributeDescription, kOsAll,  \
+      FEATURE_VALUE_TYPE(blink::features::kNavigatorConnectionAttribute)},  \
     {"tab-audio-icon-interactive",                                          \
       flag_descriptions::kTabAudioIconInteractiveName,                      \
       flag_descriptions::kTabAudioIconInteractiveDescription,               \
