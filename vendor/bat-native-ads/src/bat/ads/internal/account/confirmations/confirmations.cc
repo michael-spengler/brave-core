@@ -138,7 +138,7 @@ ConfirmationInfo Confirmations::CreateConfirmation(
 
   ConfirmationInfo confirmation;
 
-  confirmation.id = base::GenerateGUID();
+  confirmation.id = base::GUID::GenerateRandomV4();
   confirmation.transaction_id = transaction_id;
   confirmation.creative_instance_id = creative_instance_id;
   confirmation.type = confirmation_type;

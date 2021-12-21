@@ -27,9 +27,9 @@ TransactionInfo BuildTransaction(const double value,
                                  const base::Time& reconciled_at) {
   TransactionInfo transaction;
 
-  transaction.id = base::GenerateGUID();
+  transaction.id = base::GUID::GenerateRandomV4();
   transaction.created_at = Now().ToDoubleT();
-  transaction.creative_instance_id = base::GenerateGUID();
+  transaction.creative_instance_id = base::GUID::GenerateRandomV4();
   transaction.value = value;
   transaction.ad_type = AdType::kAdNotification;
   transaction.confirmation_type = confirmation_type;

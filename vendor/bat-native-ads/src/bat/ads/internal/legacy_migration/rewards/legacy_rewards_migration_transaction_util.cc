@@ -48,7 +48,7 @@ TransactionInfo BuildTransactionForReconciledTransactionsLastMonth(
   const double timestamp = time.ToDoubleT();
 
   TransactionInfo transaction;
-  transaction.id = base::GenerateGUID();
+  transaction.id = base::GUID::GenerateRandomV4();
   transaction.created_at = timestamp;
   transaction.value = GetPaymentBalanceForMonth(payments, time);
   transaction.confirmation_type = ConfirmationType::kViewed;

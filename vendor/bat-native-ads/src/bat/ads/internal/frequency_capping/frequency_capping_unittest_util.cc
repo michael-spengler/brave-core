@@ -27,7 +27,7 @@ AdEventInfo GenerateAdEvent(const AdType& type,
                             const ConfirmationType& confirmation_type) {
   AdEventInfo ad_event;
 
-  ad_event.uuid = base::GenerateGUID();
+  ad_event.uuid = base::GUID::GenerateRandomV4();
   ad_event.type = type;
   ad_event.confirmation_type = confirmation_type;
   ad_event.campaign_id = creative_ad.campaign_id;

@@ -334,7 +334,7 @@ bool ConfirmationsState::GetFailedConfirmationsFromDictionary(
         confirmation_dictionary->FindStringKey("transaction_id");
     if (!transaction_id) {
       // Migrate legacy confirmations
-      confirmation.transaction_id = base::GenerateGUID();
+      confirmation.transaction_id = base::GUID::GenerateRandomV4();
     } else {
       confirmation.transaction_id = *transaction_id;
     }
