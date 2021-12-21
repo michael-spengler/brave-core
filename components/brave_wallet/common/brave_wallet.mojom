@@ -277,6 +277,9 @@ interface KeyringControllerObserver {
   // Fired when a keyring is restored
   KeyringRestored();
 
+  // Fired when a keyring is reset
+  KeyringReset();
+
   // Fired when a keyring is locked
   Locked();
 
@@ -369,7 +372,7 @@ interface KeyringController {
   // Obtains the keyring information
   GetDefaultKeyringInfo() => (KeyringInfo keyring);
 
-  // Resets the keyring and all preferences
+  // Resets the keyring and the related preferences
   Reset();
 
   // Adds a KeyringControllerObserver
@@ -577,6 +580,9 @@ interface EthJsonRpcController {
   // Balance is 0x1 if current selected account is the same as token owner's
   // address, otherwise balance is 0x0.
   GetERC721TokenBalance(string contract_address, string token_id, string account_address) => (bool success, string balance);
+
+  // Resets the keyring and the related preferences
+  Reset();
 };
 
 enum TransactionStatus {
@@ -663,6 +669,9 @@ interface EthTxController {
   GetNonceForHardwareTransaction(string tx_meta_id) => (string? nonce);
   GetTransactionMessageToSign(string tx_meta_id) => (string? message);
   ProcessHardwareSignature(string tx_meta_id, string v, string r, string s) => (bool status);
+
+  // Resets the keyring and the related preferences
+  Reset();
 };
 
 interface BraveWalletServiceObserver {
@@ -775,6 +784,9 @@ interface BraveWalletService {
   // Obtain the pending add suggest token requests for current chain, will be
   // cleared when user switch networks.
   GetPendingAddSuggestTokenRequests() => (array<AddSuggestTokenRequest> requests);
+
+  // Resets the keyring and the related preferences
+  Reset();
 };
 
 enum DefaultWallet {

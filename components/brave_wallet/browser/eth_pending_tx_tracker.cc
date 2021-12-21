@@ -65,6 +65,11 @@ void EthPendingTxTracker::ResubmitPendingTransactions() {
   }
 }
 
+void EthPendingTxTracker::Reset() {
+  network_nonce_map_.clear();
+  dropped_blocks_counter_.clear();
+}
+
 void EthPendingTxTracker::OnGetTxReceipt(std::string id,
                                          bool status,
                                          TransactionReceipt receipt) {
@@ -97,6 +102,7 @@ void EthPendingTxTracker::OnGetNetworkNonce(std::string address,
                                             uint256_t result) {
   if (!status)
     return;
+
   network_nonce_map_[address] = result;
 }
 
