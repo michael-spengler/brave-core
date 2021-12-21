@@ -12,7 +12,9 @@ namespace blink {
 
 namespace bindings {
 
-constexpr char kConnection[] = "connection";
+namespace {
+constexpr base::StringPiece kConnection = "connection";
+}  // namespace
 
 // static
 void IDLMemberInstaller::BraveInstallAttributes(
@@ -23,10 +25,15 @@ void IDLMemberInstaller::BraveInstallAttributes(
     v8::Local<v8::Template> interface_template,
     v8::Local<v8::Signature> signature,
     base::span<const AttributeConfig> configs) {
+  // Note, that the access to this method is limited to blink::V8Navigator class
+  // by making the method private and blink::V8Navigator class a friend. Before
+  // reusing this code for another caller, make sure to check that the new
+  // config.name you want to filter out is unique across all callers invoking
+  // this method.
+  bool connection_attribute_enabled = base::FeatureList::IsEnabled(
+      blink::features::kNavigatorConnectionAttribute);
   for (const auto& config : configs) {
-    if (!base::FeatureList::IsEnabled(
-            blink::features::kNavigatorConnectionAttribute) &&
-        base::StringPiece(config.name).compare(kConnection) == 0) {
+    if (!connection_attribute_enabled && kConnection == config.name) {
       continue;
     }
     InstallAttribute(isolate, world, instance_template, prototype_template,

@@ -6,7 +6,13 @@
 #ifndef BRAVE_CHROMIUM_SRC_THIRD_PARTY_BLINK_RENDERER_PLATFORM_BINDINGS_IDL_MEMBER_INSTALLER_H_
 #define BRAVE_CHROMIUM_SRC_THIRD_PARTY_BLINK_RENDERER_PLATFORM_BINDINGS_IDL_MEMBER_INSTALLER_H_
 
+namespace blink {
+class V8Navigator;
+}  // namespace blink
+
 #define BRAVE_IDL_MEMBER_INSTALLER_H_                     \
+ private:                                                 \
+  friend class blink::V8Navigator;                        \
   static void BraveInstallAttributes(                     \
       v8::Isolate* isolate, const DOMWrapperWorld& world, \
       v8::Local<v8::Template> instance_template,          \

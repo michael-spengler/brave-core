@@ -74,7 +74,7 @@ IN_PROC_BROWSER_TEST_P(NavigatorConnectionAttributeBrowserTest,
   ASSERT_TRUE(ui_test_utils::NavigateToURL(browser(), url));
 
   auto result = content::EvalJs(main_frame(), "'connection' in navigator");
-  EXPECT_EQ(result.value.GetBool(), IsNavigatorConnectionAttributeEnabled());
+  EXPECT_EQ(IsNavigatorConnectionAttributeEnabled(), result);
 }
 
 INSTANTIATE_TEST_SUITE_P(NavigatorConnectionAttributeBrowserTest,
