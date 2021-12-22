@@ -1,0 +1,14 @@
+diff --git a/content/browser/accessibility/accessibility_event_recorder_mac.mm b/content/browser/accessibility/accessibility_event_recorder_mac.mm
+index 8cded2ca9d3bdaff18fc2d4cfc04756725c03393..66bdf2b867bcb35da4bb3d1ec0f0212d0ef892fe 100644
+--- a/content/browser/accessibility/accessibility_event_recorder_mac.mm
++++ b/content/browser/accessibility/accessibility_event_recorder_mac.mm
+@@ -109,7 +109,8 @@ void AccessibilityEventRecorderMac::EventReceived(AXUIElementRef element,
+                                                   CFDictionaryRef user_info) {
+   std::string notification_str = base::SysCFStringRefToUTF8(notification);
+ 
+-  auto formatter = AccessibilityTreeFormatterMac();
++  //auto formatter = AccessibilityTreeFormatterMac();
++  AccessibilityTreeFormatterMac formatter;
+   formatter.SetPropertyFilters({}, ui::AXTreeFormatter::kFiltersDefaultSet);
+ 
+   std::string element_str =
